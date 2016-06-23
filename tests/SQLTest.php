@@ -14,7 +14,7 @@ class SQLTest extends \PHPUnit_Framework_TestCase
     {
         $this->client = new SQL([
             'db_name'   => 'test',
-            'user_name' => 'travis',
+            'user_name' => 'root',
             'password'  => '',
             'host'      => '127.0.0.1',
             'port'      => 3306,
