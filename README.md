@@ -2,7 +2,7 @@
 
 
 [![Build Status](https://travis-ci.org/soupmix/sql.svg?branch=master)](https://travis-ci.org/soupmix/sql) [![Latest Stable Version](https://poser.pugx.org/soupmix/sql/v/stable)](https://packagist.org/packages/soupmix/sql) [![Total Downloads](https://poser.pugx.org/soupmix/sql/downloads)](https://packagist.org/packages/soupmix/sql) [![Latest Unstable Version](https://poser.pugx.org/soupmix/sql/v/unstable)](https://packagist.org/packages/soupmix/sql) [![License](https://poser.pugx.org/soupmix/sql/license)](https://packagist.org/packages/soupmix/sql)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/soupmix/sql/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/soupmix/sql/)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/soupmix/sql/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/soupmix/sql/) [![Code Coverage](https://scrutinizer-ci.com/g/soupmix/sql/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/soupmix/sql/?branch=master)
 
 Simple low level SQL adapter to handle CRUD operations written in PHP and built on top of Doctrine/DBAL. This library does not provide any ORM or ODM. 
 
