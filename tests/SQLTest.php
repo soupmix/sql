@@ -14,14 +14,16 @@ class SQLTest extends \PHPUnit_Framework_TestCase
     {
         $this->client = new SQL([
             'db_name'   => 'test',
-            'user_name' => 'test',
-            'password'  => 'test',
+            'user_name' => 'travis',
+            'password'  => '',
             'host'      => '127.0.0.1',
             'port'      => 3306,
             'charset'   => 'utf8',
             'driver'    => 'pdo_mysql',
         ]);
-        $this->client->conn->query("TRUNCATE TABLE test");
+
+        $this->client->conn->query("DROP TABLE IF EXISTS `test`");
+        $this->client->conn->query("CREATE TABLE `test` (`id` int(10) unsigned NOT NULL AUTO_INCREMENT,  `title` varchar(255) DEFAULT NULL,  `age` tinyint(3) unsigned DEFAULT NULL,  `count` tinyint(4) DEFAULT NULL,  `balance` float(3,0) DEFAULT NULL,  `date` datetime DEFAULT NULL,  PRIMARY KEY (`id`),  KEY `TEST_IDX` (`age`,`count`,`balance`,`date`) USING BTREE)");
     }
 
     public function testInsertGetDocument()

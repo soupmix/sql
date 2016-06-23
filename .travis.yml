@@ -7,10 +7,8 @@ services:
 php:
   - 7.0
   - 5.6
-  - 5.5
 
 before_script:
-  - mysql -e "DROP TABLE IF EXISTS `test`;CREATE TABLE `test` (  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,  `title` varchar(255) DEFAULT NULL,  `age` tinyint(3) unsigned DEFAULT NULL,  `count` tinyint(4) DEFAULT NULL,  `balance` float(3,0) DEFAULT NULL,  `date` datetime DEFAULT NULL,  PRIMARY KEY (`id`),  KEY `TEST_IDX` (`age`,`count`,`balance`,`date`) USING BTREE);" -uroot
   - composer install -n
 
 script:

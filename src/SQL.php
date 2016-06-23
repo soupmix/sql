@@ -127,7 +127,7 @@ class SQL implements Base
             }
         }
         $queryBuilderForResult = clone $queryBuilder;
-        $queryBuilder->select(" COUNT(*) AS total ");var_dump($queryBuilder->getSql());
+        $queryBuilder->select(" COUNT(*) AS total ");
         $stmt = $this->conn->executeQuery($queryBuilder->getSql(), $queryBuilder->getParameters());
         $count = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         $numberOfSet = 0;
