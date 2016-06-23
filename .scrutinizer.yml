@@ -10,3 +10,10 @@ build:
   dependencies:
     before:
       - mysql -e "CREATE DATABASE test"
+  tests:
+    override:
+      -
+        command: 'phpunit --coverage-clover=.soupmix_coverage'
+        coverage:
+          file: '.soupmix_coverage'
+          format: 'clover'
