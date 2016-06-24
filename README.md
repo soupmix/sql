@@ -32,8 +32,8 @@ $config = [
     'port'      => 3306,
     'charset'   => 'utf8',
     'driver'    => 'pdo_mysql',
-]
-$sql=new Soupmix\SQL($adapter_config);
+];
+$sql=new Soupmix\SQL($config);
 
 
 $docs = [];
