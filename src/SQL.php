@@ -220,9 +220,9 @@ class SQL implements Base
         return ['total' => $numberOfSet, 'data' => $result];
     }
 
-    public function query($query)
+    public function query($collection)
     {
-        // reserved
+        return new SQLQueryBuilder($collection);
     }
 
     public static function buildFilter($filter)

@@ -1,9 +1,9 @@
 {
     "name": "soupmix/sql",
     "type": "library",
-    "description": "Simple PHP MongoDB adapter to handle low level CRUD operations.",
-    "keywords": ["database", "adapters", "sql", "mysql", "postgresql", "msql", "sql server", "sqlite", "oracle"],
-    "homepage": "https://github.com/soupmix/mongodb",
+    "description": "Simple SQL abstraction layer adapter to handle CRUD operations.",
+    "keywords": ["database", "abstraction layer", "adapters", "sql", "doctrine", "dbal" ,"mysql", "postgresql", "msql", "microsoft sql server", "sqlite", "oracle"],
+    "homepage": "https://github.com/soupmix/sql",
     "license": "MIT",
     "authors": [
         {
@@ -13,7 +13,7 @@
         }
     ],
     "require": {
-        "soupmix/base": "~0.5.1",
+        "soupmix/base": "~0.6",
         "doctrine/dbal": "^2.5"
     },
     "require-dev": {
