@@ -6,6 +6,10 @@ SQL Adapter
 */
 
 use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Schema\Table;
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Types\Type;
+use Doctrine\DBAL\Schema\Index;
 
 class SQL implements Base
 {
@@ -19,6 +23,15 @@ class SQL implements Base
         'charset'   => 'utf8',
         'driver'    => 'pdo_mysql',
     ];
+    private static $columnDefaults = [
+        'name'      => null,
+        'type'      => 'string',
+        'type_info' => null,
+        'maxLength' => 255,
+        'default'   => null,
+        'index'     => null,
+        'index_type'=> null,
+]   ;
 
     public function __construct($config)
     {
@@ -40,21 +53,77 @@ class SQL implements Base
         $this->conn = DriverManager::getConnection($connectionParams);
     }
 
-    public function create($collection)
+    public function create($collection, $fields)
     {
+        $columns = [];
+        $indexes = [];
+        $schemaManager = $this->conn->getSchemaManager();
+        $columns[] = new Column('id', Type::getType('integer'), ['unsigned' => true, 'autoincrement' => true] );
+        $indexes[] = new Index($collection.'_PK', ['id'], false, true);
+        $tmpIndexes = [];
+        foreach ($fields as $field){
+            $field = array_merge(self::$columnDefaults, $field);
+            $options = [];
+            if ($field['type'] == 'integer' && $field['type_info'] == 'unsigned') {
+                $options['unsigned'] = true;
+            }
+            $options['length'] = $field['maxLength'];
+            $options['default'] = $field['default'];
+            if ($field['index'] !== null) {
+                if ( $field['index_type'] == 'unique' ) {
+                    $indexes[] = new Index($collection . '_' . $field['name'] . '_UNQ', [$field['name']], true, false);
+                } else {
+                    $tmpIndexes[] = $field['name'];
+                }
+            }
+
+            $columns[] = new Column($field['name'], Type::getType($field['type']), $options );
+        }
+        if(count($tmpIndexes)>0){
+            $indexes[] = new Index($collection . '_IDX', $tmpIndexes, false, false);
+        }
+        $table = new Table($collection, $columns, $indexes);
+        return $schemaManager->createTable($table);
     }
 
     public function drop($collection)
     {
-
+        $schemaManager = $this->conn->getSchemaManager();
+        if ($schemaManager->tablesExist([$collection])) {
+            return $schemaManager->dropTable($collection);
+        } else {
+            return null;
+        }
     }
 
     public function truncate($collection)
     {
+        return $this->client->conn->query('TRUNCATE TABLE `' . $collection . '`');
     }
 
     public function createIndexes($collection, $indexes)
     {
+        $schemaManager = $this->conn->getSchemaManager();
+
+        $tmpIndexes = [];
+        foreach ($indexes as $field){
+            $field = array_merge(self::$columnDefaults, $field);
+            if ($field['index'] !== null) {
+                if ( $field['index_type'] == 'unique' ) {
+                    $indexes[] = new Index($collection . '_' . $field['name'] . '_UNQ', [$field['name']], true, false);
+                } else {
+                    $tmpIndexes[] = $field['name'];
+                }
+            }
+        }
+        if (count($tmpIndexes) > 0) {
+            $indexes[] = new Index($collection . '_IDX', $tmpIndexes, false, false);
+        }
+        foreach ($indexes as $index) {
+            $schemaManager->createIndex($index, $collection);
+        }
+
+
     }
 
     public function insert($collection, $values)

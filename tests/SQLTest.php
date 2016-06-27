@@ -12,6 +12,7 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
+        ini_set("date.timezone", "Europe/Istanbul");
         $this->client = new SQL([
             'db_name'   => 'test',
             'user_name' => 'root',
@@ -21,20 +22,29 @@ class SQLTest extends \PHPUnit_Framework_TestCase
             'charset'   => 'utf8',
             'driver'    => 'pdo_mysql',
         ]);
+        $fields = [
+            ['name' => 'title','type' => 'string', 'index' => true, 'index_type' => 'unique'],
+            ['name' => 'age','type' =>'smallint', 'maxLength' => 3, 'default' => 24, 'index' => true],
+            ['name' => 'count','type'=>'smallint', 'maxLength' => 3, 'default' => 0, 'index' => true ],
+            ['name' => 'balance','type'=>'float', 'maxLength' => 3, 'default' => 0.0],
+            ['name' => 'date','type'=>'datetime']
+        ];
 
-        $this->client->conn->query("DROP TABLE IF EXISTS `test`");
-        $this->client->conn->query("CREATE TABLE `test` (`id` int(10) unsigned NOT NULL AUTO_INCREMENT,  `title` varchar(255) DEFAULT NULL,  `age` tinyint(3) unsigned DEFAULT NULL,  `count` tinyint(4) DEFAULT NULL,  `balance` float(3,0) DEFAULT NULL,  `date` datetime DEFAULT NULL,  PRIMARY KEY (`id`),  KEY `TEST_IDX` (`age`,`count`,`balance`,`date`) USING BTREE)");
+        $this->client->drop('test');
+        $this->client->create('test', $fields);
     }
+
 
     public function testInsertGetDocument()
     {
-        $docId = $this->client->insert('test', ['id' => 1, 'title' => 'test', 'age'=> 23]);
+        $docId = $this->client->insert('test', ['id' => 1, 'title' => 'test','date' => date("Y-m-d H:i:s")]);
         $document = $this->client->get('test', $docId);
         $this->assertArrayHasKey('title', $document);
         $this->assertArrayHasKey('id', $document);
         $result = $this->client->delete('test', ['id' => $docId]);
         $this->assertTrue($result == 1);
     }
+
 
     public function testFindDocuments()
     {
@@ -56,7 +66,7 @@ class SQLTest extends \PHPUnit_Framework_TestCase
         $this->assertGreaterThanOrEqual(2, $results['total'],
             'Total not greater than or equal to 2 on count_gte filtering');
 
-        $results = $this->client->find('test', ['count__gte' => 6, 'count__gte' => 2]);
+        $results = $this->client->find('test', [[['count__gte' => 6], ['count__gte' => 2]]]);
         $this->assertGreaterThanOrEqual(1, $results['total'],
             'Total not greater than or equal to 2 on count__gte and count__gte filtering');
 
@@ -72,19 +82,21 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 
 
 
+
+
     public function bulkData()
     {
         return [
-            ['id' => 1, 'date' => '2015-04-10 00:00:00', 'title' => 'test1', 'balance' => 100.0, 'count' => 1],
-            ['id' => 2, 'date' => '2015-04-11 00:00:00', 'title' => 'test2', 'balance' => 120.0, 'count' => 2],
-            ['id' => 3, 'date' => '2015-04-12 00:00:00', 'title' => 'test3', 'balance' => 101.5, 'count' => 3],
-            ['id' => 4, 'date' => '2015-04-12 00:00:00', 'title' => 'test4', 'balance' => 200.5, 'count' => 4],
-            ['id' => 5, 'date' => '2015-04-13 00:00:00', 'title' => 'test5', 'balance' => 150.0, 'count' => 5],
-            ['id' => 6, 'date' => '2015-04-14 00:00:00', 'title' => 'test6', 'balance' => 400.8, 'count' => 6],
-            ['id' => 7, 'date' => '2015-04-15 00:00:00', 'title' => 'test7', 'balance' => 240.0, 'count' => 7],
-            ['id' => 8, 'date' => '2015-04-20 00:00:00', 'title' => 'test8', 'balance' => 760.0, 'count' => 8],
-            ['id' => 9, 'date' => '2015-04-20 00:00:00', 'title' => 'test9', 'balance' => 50.0, 'count' => 9],
-            ['id' => 10, 'date' => '2015-04-21 00:00:00', 'title' => 'test0', 'balance' => 55.5, 'count' => 10],
+            ['date' => '2015-04-10 00:00:00', 'title' => 'test1', 'balance' => 100.0, 'count' => 1],
+            ['date' => '2015-04-11 00:00:00', 'title' => 'test2', 'balance' => 120.0, 'count' => 2],
+            ['date' => '2015-04-12 00:00:00', 'title' => 'test3', 'balance' => 101.5, 'count' => 3],
+            ['date' => '2015-04-12 00:00:00', 'title' => 'test4', 'balance' => 200.5, 'count' => 4],
+            ['date' => '2015-04-13 00:00:00', 'title' => 'test5', 'balance' => 150.0, 'count' => 5],
+            ['date' => '2015-04-14 00:00:00', 'title' => 'test6', 'balance' => 400.8, 'count' => 6],
+            ['date' => '2015-04-15 00:00:00', 'title' => 'test7', 'balance' => 240.0, 'count' => 7],
+            ['date' => '2015-04-20 00:00:00', 'title' => 'test8', 'balance' => 760.0, 'count' => 8],
+            ['date' => '2015-04-20 00:00:00', 'title' => 'test9', 'balance' => 50.0, 'count' => 9],
+            ['date' => '2015-04-21 00:00:00', 'title' => 'test0', 'balance' => 55.5, 'count' => 10],
         ];
     }
 }
