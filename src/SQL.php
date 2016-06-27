@@ -94,20 +94,38 @@ class SQL implements Base
             foreach ($filters as $key => $value) {
                 if (strpos($key, '__')!==false) {
                     $sqlOptions = self::buildFilter([$key=>$value]);
-                    $queryBuilder->andWhere(
-                        $sqlOptions['key']
-                        . ' ' . $sqlOptions['operand']
-                        . ' ' . $queryBuilder->createNamedParameter($sqlOptions['value']));
+
+                    if(in_array($sqlOptions['method'], ['in','notIn',''])){
+                        $queryBuilder->andWhere(
+                            $queryBuilder->expr()->{$sqlOptions['method']}( $sqlOptions['key'], $sqlOptions['value'])
+                        );
+                    }
+                    else{
+                        $queryBuilder->andWhere(
+                            $sqlOptions['key']
+                            . ' ' . $sqlOptions['operand']
+                            . ' ' . $queryBuilder->createNamedParameter($sqlOptions['value']));
+                    }
+
+
                 } elseif (strpos($key, '__') === false && is_array($value)) {
                     foreach ($value as $orValue) {
                         $subKey = array_keys($orValue)[0];
                         $subValue = $orValue[$subKey];
                         if (strpos($subKey, '__')!==false) {
                             $sqlOptions = self::buildFilter([$subKey=>$subValue]);
-                            $queryBuilder->orWhere(
-                                $sqlOptions['key']
-                                . ' ' . $sqlOptions['operand']
-                                . ' ' . $queryBuilder->createNamedParameter($sqlOptions['value']));
+
+                            if(in_array($sqlOptions['method'], ['in','notIn',''])){
+                                $queryBuilder->orWhere(
+                                    $queryBuilder->expr()->{$sqlOptions['method']}( $sqlOptions['key'], $sqlOptions['value'])
+                                );
+                            }
+                            else{
+                                $queryBuilder->orWhere(
+                                    $sqlOptions['key']
+                                    . ' ' . $sqlOptions['operand']
+                                    . ' ' . $queryBuilder->createNamedParameter($sqlOptions['value']));
+                            }
                         } else {
                             $queryBuilder->orWhere($subKey . '=' . $queryBuilder->createNamedParameter($subValue));
                         }
@@ -152,37 +170,48 @@ class SQL implements Base
     {
         $key = array_keys($filter)[0];
         $value = $filter[$key];
+        $operator = ' = ';
+        $method = 'eq';
         if (strpos($key, '__')!==false) {
             preg_match('/__(.*?)$/i', $key, $matches);
             $operator = $matches[1];
             switch ($operator) {
                 case 'gte':
                     $operator = ' >= ';
+                    $method = 'gte';
                     break;
                 case 'gt':
                     $operator = ' > ';
+                    $method = 'gt';
                     break;
                 case 'lte':
                     $operator = ' <= ';
+                    $method = 'lte';
                     break;
                 case 'lt':
                     $operator = ' < ';
+                    $method = 'lt';
                     break;
                 case 'in':
                     $operator = ' IN ';
+                    $method = 'in';
                     break;
-                case '!in':
+                case 'nin':
                     $operator = ' NOT IN ';
+                    $method = 'notIn';
                     break;
                 case 'not':
                     $operator = ' != ';
+                    $method = 'not';
                     break;
                 case 'wildcard':
                     $operator = ' LIKE ';
+                    $method = 'like';
                     $value = str_replace(array('?','*'), array('_','%'), $value);
                     break;
                 case 'prefix':
                     $operator = ' LIKE ';
+                    $method = 'like';
                     $value = $value.'%';
                     break;
             }
@@ -190,6 +219,7 @@ class SQL implements Base
         return [
             'key'       => str_replace($matches[0], '', $key),
             'operand'   => $operator,
+            'method'    => $method,
             'value'     => $value
         ];
 

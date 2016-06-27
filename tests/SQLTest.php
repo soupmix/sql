@@ -36,8 +36,6 @@ class SQLTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($result == 1);
     }
 
-
-
     public function testFindDocuments()
     {
         $docIds = [];
