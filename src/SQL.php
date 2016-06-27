@@ -92,29 +92,12 @@ class SQL implements Base
         $queryBuilder->from($collection);
         if ($filters !== null) {
             foreach ($filters as $key => $value) {
-                if (strpos($key, '__')!==false) {
-                    $sqlOptions = self::buildFilter([$key=>$value]);
-
-                    if(in_array($sqlOptions['method'], ['in','notIn',''])){
-                        $queryBuilder->andWhere(
-                            $queryBuilder->expr()->{$sqlOptions['method']}( $sqlOptions['key'], $sqlOptions['value'])
-                        );
-                    }
-                    else{
-                        $queryBuilder->andWhere(
-                            $sqlOptions['key']
-                            . ' ' . $sqlOptions['operand']
-                            . ' ' . $queryBuilder->createNamedParameter($sqlOptions['value']));
-                    }
-
-
-                } elseif (strpos($key, '__') === false && is_array($value)) {
+                 if (strpos($key, '__') === false && is_array($value)) {
                     foreach ($value as $orValue) {
                         $subKey = array_keys($orValue)[0];
                         $subValue = $orValue[$subKey];
                         if (strpos($subKey, '__')!==false) {
                             $sqlOptions = self::buildFilter([$subKey=>$subValue]);
-
                             if(in_array($sqlOptions['method'], ['in','notIn',''])){
                                 $queryBuilder->orWhere(
                                     $queryBuilder->expr()->{$sqlOptions['method']}( $sqlOptions['key'], $sqlOptions['value'])
@@ -131,7 +114,18 @@ class SQL implements Base
                         }
                     }
                 } else {
-                    $queryBuilder->andWhere($key . "=" . $queryBuilder->createNamedParameter($value));
+                    $sqlOptions = self::buildFilter([$key=>$value]);
+                    if(in_array($sqlOptions['method'], ['in', 'notIn', ''])){
+                        $queryBuilder->andWhere(
+                            $queryBuilder->expr()->{$sqlOptions['method']}( $sqlOptions['key'], $sqlOptions['value'])
+                        );
+                    }
+                    else{
+                        $queryBuilder->andWhere(
+                            $sqlOptions['key']
+                            . ' ' . $sqlOptions['operand']
+                            . ' ' . $queryBuilder->createNamedParameter($sqlOptions['value']));
+                    }
                 }
             }
         }
@@ -144,18 +138,18 @@ class SQL implements Base
                 $queryBuilder->addOrderBy($sort_key, $sort_dir);
             }
         }
-        $queryBuilderForResult = clone $queryBuilder;
-        $queryBuilder->select(" COUNT(*) AS total ");
-        $stmt = $this->conn->executeQuery($queryBuilder->getSql(), $queryBuilder->getParameters());
+        $queryBuilderCount = clone $queryBuilder;
+        $queryBuilderCount->select(" COUNT(*) AS total ");
+        $stmt = $this->conn->executeQuery($queryBuilderCount->getSql(), $queryBuilderCount->getParameters());
         $count = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         $numberOfSet = 0;
         if (isset($count[0]['total']) && ($count[0]['total']>0)) {
             $numberOfSet = $count[0]['total'];
             $fields = ($fields === null) ? "*" : $fields;
-            $queryBuilderForResult->select($fields)
+            $queryBuilder->select($fields)
                 ->setFirstResult($start)
                 ->setMaxResults($limit);
-            $stmt = $this->conn->executeQuery($queryBuilderForResult->getSql(), $queryBuilderForResult->getParameters());
+            $stmt = $this->conn->executeQuery($queryBuilder->getSql(), $queryBuilder->getParameters());
             $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         }
         return ['total' => $numberOfSet, 'data' => $result];
@@ -198,12 +192,13 @@ class SQL implements Base
 
         if (strpos($key, '__')!==false) {
             preg_match('/__(.*?)$/i', $key, $matches);
-            $operator = $matches[1];
+            $key        = str_replace($matches[0], '', $key);
+            $operator   = $matches[1];
             $method     = $methods[$operator];
             $operator   = $operands[$operator];
             switch ($operator) {
                 case 'wildcard':
-                    $value = str_replace(array('?','*'), array('_','%'), $value);
+                    $value = str_replace(array('?', '*'), array('_', '%'), $value);
                     break;
                 case 'prefix':
                     $value = $value.'%';
@@ -211,7 +206,7 @@ class SQL implements Base
             }
         }
         return [
-            'key'       => str_replace($matches[0], '', $key),
+            'key'       => $key,
             'operand'   => $operator,
             'method'    => $method,
             'value'     => $value
