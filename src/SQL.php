@@ -172,46 +172,40 @@ class SQL implements Base
         $value = $filter[$key];
         $operator = ' = ';
         $method = 'eq';
+
+        $methods = [
+            'gte'   => 'gte',
+            'gt'    => 'gt',
+            'lte'   => 'lte',
+            'lt'    => 'lt',
+            'in'    => 'in',
+            '!in'   => 'notIn',
+            'not'   => 'not',
+            'wildchard' => 'like',
+            'prefix' => 'like',
+        ];
+        $operands = [
+            'gte'   => ' >= ',
+            'gt'    => ' > ',
+            'lte'   => ' <= ',
+            'lt'    => ' < ',
+            'in'    => ' IN ',
+            '!in'   => ' NOT IN',
+            'not'   => ' NOT',
+            'wildchard' => ' LIKE ',
+            'prefix' => ' LIKE ',
+        ];
+
         if (strpos($key, '__')!==false) {
             preg_match('/__(.*?)$/i', $key, $matches);
             $operator = $matches[1];
+            $method     = $methods[$operator];
+            $operator   = $operands[$operator];
             switch ($operator) {
-                case 'gte':
-                    $operator = ' >= ';
-                    $method = 'gte';
-                    break;
-                case 'gt':
-                    $operator = ' > ';
-                    $method = 'gt';
-                    break;
-                case 'lte':
-                    $operator = ' <= ';
-                    $method = 'lte';
-                    break;
-                case 'lt':
-                    $operator = ' < ';
-                    $method = 'lt';
-                    break;
-                case 'in':
-                    $operator = ' IN ';
-                    $method = 'in';
-                    break;
-                case 'nin':
-                    $operator = ' NOT IN ';
-                    $method = 'notIn';
-                    break;
-                case 'not':
-                    $operator = ' != ';
-                    $method = 'not';
-                    break;
                 case 'wildcard':
-                    $operator = ' LIKE ';
-                    $method = 'like';
                     $value = str_replace(array('?','*'), array('_','%'), $value);
                     break;
                 case 'prefix':
-                    $operator = ' LIKE ';
-                    $method = 'like';
                     $value = $value.'%';
                     break;
             }
