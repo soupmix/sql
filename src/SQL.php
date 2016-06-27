@@ -96,21 +96,17 @@ class SQL implements Base
                     foreach ($value as $orValue) {
                         $subKey = array_keys($orValue)[0];
                         $subValue = $orValue[$subKey];
-                        if (strpos($subKey, '__')!==false) {
-                            $sqlOptions = self::buildFilter([$subKey=>$subValue]);
-                            if(in_array($sqlOptions['method'], ['in','notIn',''])){
-                                $queryBuilder->orWhere(
-                                    $queryBuilder->expr()->{$sqlOptions['method']}( $sqlOptions['key'], $sqlOptions['value'])
-                                );
-                            }
-                            else{
-                                $queryBuilder->orWhere(
-                                    $sqlOptions['key']
-                                    . ' ' . $sqlOptions['operand']
-                                    . ' ' . $queryBuilder->createNamedParameter($sqlOptions['value']));
-                            }
-                        } else {
-                            $queryBuilder->orWhere($subKey . '=' . $queryBuilder->createNamedParameter($subValue));
+                        $sqlOptions = self::buildFilter([$subKey=>$subValue]);
+                        if(in_array($sqlOptions['method'], ['in','notIn',''])){
+                            $queryBuilder->orWhere(
+                                $queryBuilder->expr()->{$sqlOptions['method']}( $sqlOptions['key'], $sqlOptions['value'])
+                            );
+                        }
+                        else{
+                            $queryBuilder->orWhere(
+                                $sqlOptions['key']
+                                . ' ' . $sqlOptions['operand']
+                                . ' ' . $queryBuilder->createNamedParameter($sqlOptions['value']));
                         }
                     }
                 } else {
