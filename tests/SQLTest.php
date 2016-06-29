@@ -15,8 +15,8 @@ class SQLTest extends \PHPUnit_Framework_TestCase
         ini_set("date.timezone", "Europe/Istanbul");
 
         $config = [
-            'db_name'   => 'test',
-            'user_name' => 'root',
+            'dbname'    => 'test',
+            'user'      => 'root',
             'password'  => '',
             'host'      => '127.0.0.1',
             'port'      => 3306,
@@ -26,7 +26,7 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 
         $client = DriverManager::getConnection($config);
 
-        $this->client = new SQL($config, $client);
+        $this->client = new SQL(['db_name'=>$config['dbname']], $client);
         $fields = [
             ['name' => 'title','type' => 'string', 'index' => true, 'index_type' => 'unique'],
             ['name' => 'age','type' =>'smallint', 'maxLength' => 3, 'default' => 24, 'index' => true],

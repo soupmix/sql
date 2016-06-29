@@ -13,16 +13,8 @@ use Doctrine\DBAL\Schema\Index;
 
 class SQL implements Base
 {
-    public $conn = null;
-    private $defaults = [
-        'db_name'   => 'default',
-        'user_name' => '',
-        'password'  => '',
-        'host'      => '127.0.0.1',
-        'port'      => 3306,
-        'charset'   => 'utf8',
-        'driver'    => 'pdo_mysql',
-    ];
+    private $conn = null;
+    private $dbName = null;
     private static $columnDefaults = [
         'name'      => null,
         'type'      => 'string',
@@ -35,9 +27,8 @@ class SQL implements Base
 
     public function __construct($config, Connection $client)
     {
-        $config = array_merge($this->defaults, $config);
         $this->conn = $client;
-
+        $this->dbName = $config['db_name'];
     }
 
     public function getConnection()
