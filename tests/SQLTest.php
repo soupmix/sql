@@ -2,7 +2,7 @@
 namespace tests;
 
 use Soupmix\SQL;
-
+use Doctrine\DBAL\DriverManager;
 class SQLTest extends \PHPUnit_Framework_TestCase
 {
     /**
@@ -13,7 +13,8 @@ class SQLTest extends \PHPUnit_Framework_TestCase
     protected function setUp()
     {
         ini_set("date.timezone", "Europe/Istanbul");
-        $this->client = new SQL([
+
+        $config = [
             'db_name'   => 'test',
             'user_name' => 'root',
             'password'  => '',
@@ -21,7 +22,11 @@ class SQLTest extends \PHPUnit_Framework_TestCase
             'port'      => 3306,
             'charset'   => 'utf8',
             'driver'    => 'pdo_mysql',
-        ]);
+        ];
+
+        $client = DriverManager::getConnection($config);
+
+        $this->client = new SQL($config, $client);
         $fields = [
             ['name' => 'title','type' => 'string', 'index' => true, 'index_type' => 'unique'],
             ['name' => 'age','type' =>'smallint', 'maxLength' => 3, 'default' => 24, 'index' => true],

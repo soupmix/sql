@@ -5,7 +5,7 @@ namespace Soupmix;
 SQL Adapter
 */
 
-use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Types\Type;
@@ -33,24 +33,16 @@ class SQL implements Base
         'index_type'=> null,
 ]   ;
 
-    public function __construct($config)
+    public function __construct($config, Connection $client)
     {
         $config = array_merge($this->defaults, $config);
-        $this->connect($config);
+        $this->conn = $client;
+
     }
 
-    public function connect($config)
+    public function getConnection()
     {
-        $connectionParams = array(
-            'dbname' => $config['db_name'],
-            'user' => $config['user_name'],
-            'password' => $config['password'],
-            'host' => $config['host'],
-            'port' => $config['port'],
-            'charset' => $config['charset'],
-            'driver' => $config['driver'],
-        );
-        $this->conn = DriverManager::getConnection($connectionParams);
+        return $this->conn;
     }
 
     public function create($collection, $fields)
