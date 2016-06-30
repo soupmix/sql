@@ -24,16 +24,19 @@ This will install Soupmix and all required dependencies. Soupmix requires PHP 5.
 ## Usage
 ```
 // Connect to SQL Service
+
+
 $config = [
-    'db_name'   => 'test',
-    'user_name' => 'user',
+    'dbname'    => 'test',
+    'user'      => 'root',
     'password'  => '',
     'host'      => '127.0.0.1',
     'port'      => 3306,
     'charset'   => 'utf8',
     'driver'    => 'pdo_mysql',
 ];
-$sql=new Soupmix\SQL($config);
+$client = \Doctrine\DBAL\DriverManager::getConnection($config);
+$sql = new \Soupmix\SQL(['db_name'=>$config['dbname']], $client);
 
 
 $docs = [];
