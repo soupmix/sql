@@ -13,9 +13,9 @@ use Doctrine\DBAL\Schema\Index;
 
 class SQL implements Base
 {
-    private $conn = null;
-    private $dbName = null;
-    private static $columnDefaults = [
+    protected $conn = null;
+    protected $dbName = null;
+    protected static $columnDefaults = [
         'name'      => null,
         'type'      => 'string',
         'type_info' => null,
@@ -140,52 +140,7 @@ class SQL implements Base
     public function find($collection, $filters, $fields = null, $sort = null, $start = 0, $limit = 25, $debug = false)
     {
         $result = null;
-        $queryBuilder = $this->conn->createQueryBuilder();
-        $queryBuilder->from($collection);
-        if ($filters !== null) {
-            foreach ($filters as $key => $value) {
-                 if (strpos($key, '__') === false && is_array($value)) {
-                    foreach ($value as $orValue) {
-                        $subKey = array_keys($orValue)[0];
-                        $subValue = $orValue[$subKey];
-                        $sqlOptions = self::buildFilter([$subKey=>$subValue]);
-                        if(in_array($sqlOptions['method'], ['in','notIn',''])){
-                            $queryBuilder->orWhere(
-                                $queryBuilder->expr()->{$sqlOptions['method']}( $sqlOptions['key'], $sqlOptions['value'])
-                            );
-                        }
-                        else{
-                            $queryBuilder->orWhere(
-                                $sqlOptions['key']
-                                . ' ' . $sqlOptions['operand']
-                                . ' ' . $queryBuilder->createNamedParameter($sqlOptions['value']));
-                        }
-                    }
-                } else {
-                    $sqlOptions = self::buildFilter([$key=>$value]);
-                    if(in_array($sqlOptions['method'], ['in', 'notIn', ''])){
-                        $queryBuilder->andWhere(
-                            $queryBuilder->expr()->{$sqlOptions['method']}( $sqlOptions['key'], $sqlOptions['value'])
-                        );
-                    }
-                    else{
-                        $queryBuilder->andWhere(
-                            $sqlOptions['key']
-                            . ' ' . $sqlOptions['operand']
-                            . ' ' . $queryBuilder->createNamedParameter($sqlOptions['value']));
-                    }
-                }
-            }
-        }
-        if ($sort !== null) {
-            $params['sort'] = '';
-            foreach ($sort as $sort_key => $sort_dir) {
-                if ($params['sort']!='') {
-                    $params['sort'] .= ',';
-                }
-                $queryBuilder->addOrderBy($sort_key, $sort_dir);
-            }
-        }
+        $queryBuilder = $this->buildQuery($collection, $filters);
         $queryBuilderCount = clone $queryBuilder;
         $queryBuilderCount->select(" COUNT(*) AS total ");
         $stmt = $this->conn->executeQuery($queryBuilderCount->getSql(), $queryBuilderCount->getParameters());
@@ -194,6 +149,15 @@ class SQL implements Base
         if (isset($count[0]['total']) && ($count[0]['total']>0)) {
             $numberOfSet = $count[0]['total'];
             $fields = ($fields === null) ? "*" : $fields;
+            if ($sort !== null) {
+                $params['sort'] = '';
+                foreach ($sort as $sort_key => $sort_dir) {
+                    if ($params['sort']!='') {
+                        $params['sort'] .= ',';
+                    }
+                    $queryBuilder->addOrderBy($sort_key, $sort_dir);
+                }
+            }
             $queryBuilder->select($fields)
                 ->setFirstResult($start)
                 ->setMaxResults($limit);
@@ -203,9 +167,58 @@ class SQL implements Base
         return ['total' => $numberOfSet, 'data' => $result];
     }
 
+    public function buildQuery($collection, $filters)
+    {
+        $queryBuilder = $this->conn->createQueryBuilder();
+        $queryBuilder->from($collection);
+        if ($filters !== null) {
+            foreach ($filters as $key => $value) {
+                if (strpos($key, '__') === false && is_array($value)) {
+                    $orQuery =[];
+                    foreach ($value as $orValue) {
+                        $subKey = array_keys($orValue)[0];
+                        $subValue = $orValue[$subKey];
+                        $sqlOptions = self::buildFilter([$subKey => $subValue]);
+                        if(in_array($sqlOptions['method'], ['in', 'notIn'])){
+                            $orQuery[] =  $queryBuilder->expr()->{$sqlOptions['method']}( $sqlOptions['key'], $sqlOptions['value']);
+                        }
+                        else{
+                            $orQuery[] =
+                                '`'.$sqlOptions['key'].'`'
+                                . ' ' . $sqlOptions['operand']
+                                . ' ' . $queryBuilder->createNamedParameter($sqlOptions['value']);
+                        }
+                    }
+
+                    $queryBuilder->andWhere(
+                        implode(' OR ', $orQuery)
+                    );
+                } else {
+                    $sqlOptions = self::buildFilter([$key=>$value]);
+                    if(in_array($sqlOptions['method'], ['in', 'notIn', ''])){
+                        $queryBuilder->andWhere(
+                            $queryBuilder->expr()->{$sqlOptions['method']}( $sqlOptions['key'], $sqlOptions['value'])
+                        );
+                    }
+                    else{
+                        $queryBuilder->andWhere(
+                            '`'.$sqlOptions['key'].'`'
+                            . ' ' . $sqlOptions['operand']
+                            . ' ' . $queryBuilder->createNamedParameter($sqlOptions['value'])
+                        );
+                    }
+                }
+            }
+        }
+
+        return $queryBuilder;
+    }
+
+
+
     public function query($collection)
     {
-        return new SQLQueryBuilder($collection);
+        return new SQLQueryBuilder($collection, $this);
     }
 
     public static function buildFilter($filter)
