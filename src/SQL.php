@@ -13,7 +13,7 @@ use Doctrine\DBAL\Schema\Index;
 
 class SQL implements Base
 {
-    protected $conn = null;
+    protected $doctrine = null;
     protected $dbName = null;
     protected static $columnDefaults = [
         'name'      => null,
@@ -27,20 +27,20 @@ class SQL implements Base
 
     public function __construct($config, Connection $client)
     {
-        $this->conn = $client;
+        $this->doctrine = $client;
         $this->dbName = $config['db_name'];
     }
 
     public function getConnection()
     {
-        return $this->conn;
+        return $this->doctrine;
     }
 
     public function create($collection, $fields)
     {
         $columns = [];
         $indexes = [];
-        $schemaManager = $this->conn->getSchemaManager();
+        $schemaManager = $this->doctrine->getSchemaManager();
         $columns[] = new Column('id', Type::getType('integer'), ['unsigned' => true, 'autoincrement' => true] );
         $indexes[] = new Index($collection.'_PK', ['id'], false, true);
         $tmpIndexes = [];
@@ -59,7 +59,6 @@ class SQL implements Base
                     $tmpIndexes[] = $field['name'];
                 }
             }
-
             $columns[] = new Column($field['name'], Type::getType($field['type']), $options );
         }
         if(count($tmpIndexes)>0){
@@ -71,7 +70,7 @@ class SQL implements Base
 
     public function drop($collection)
     {
-        $schemaManager = $this->conn->getSchemaManager();
+        $schemaManager = $this->doctrine->getSchemaManager();
         if ($schemaManager->tablesExist([$collection])) {
             return $schemaManager->dropTable($collection);
         } else {
@@ -81,13 +80,12 @@ class SQL implements Base
 
     public function truncate($collection)
     {
-        return $this->client->conn->query('TRUNCATE TABLE `' . $collection . '`');
+        return $this->client->doctrine->query('TRUNCATE TABLE `' . $collection . '`');
     }
 
     public function createIndexes($collection, $indexes)
     {
-        $schemaManager = $this->conn->getSchemaManager();
-
+        $schemaManager = $this->doctrine->getSchemaManager();
         $tmpIndexes = [];
         foreach ($indexes as $field){
             $field = array_merge(self::$columnDefaults, $field);
@@ -105,27 +103,25 @@ class SQL implements Base
         foreach ($indexes as $index) {
             $schemaManager->createIndex($index, $collection);
         }
-
-
     }
 
     public function insert($collection, $values)
     {
-        $insertion = $this->conn->insert($collection, $values);
+        $insertion = $this->doctrine->insert($collection, $values);
         if($insertion !== 0) {
-            return $this->conn->lastInsertId();
+            return $this->doctrine->lastInsertId();
         }
         return null;
     }
 
     public function update($collection, $filter, $values)
     {
-        return $this->conn->update($collection, $values, $filter);
+        return $this->doctrine->update($collection, $values, $filter);
     }
 
     public function delete($collection, $filter)
     {
-        $numberOfDeletedItems = $this->conn->delete($collection, $filter);
+        $numberOfDeletedItems = $this->doctrine->delete($collection, $filter);
         if ($numberOfDeletedItems>0) {
             return 1;
         }
@@ -134,42 +130,29 @@ class SQL implements Base
 
     public function get($collection, $docId)
     {
-        return $this->conn->fetchAssoc('SELECT * FROM '.$collection.' WHERE id = ?', array($docId));
+        return $this->doctrine->fetchAssoc('SELECT * FROM '.$collection.' WHERE id = ?', array($docId));
     }
 
-    public function find($collection, $filters, $fields = null, $sort = null, $start = 0, $limit = 25, $debug = false)
+    public function find($collection, $filters, $fields = null, $sort = null, $offset = 0, $limit = 25, $debug = false)
     {
-        $result = null;
-        $queryBuilder = $this->buildQuery($collection, $filters);
-        $queryBuilderCount = clone $queryBuilder;
-        $queryBuilderCount->select(" COUNT(*) AS total ");
-        $stmt = $this->conn->executeQuery($queryBuilderCount->getSql(), $queryBuilderCount->getParameters());
-        $count = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        $numberOfSet = 0;
-        if (isset($count[0]['total']) && ($count[0]['total']>0)) {
-            $numberOfSet = $count[0]['total'];
-            $fields = ($fields === null) ? "*" : $fields;
-            if ($sort !== null) {
-                $params['sort'] = '';
-                foreach ($sort as $sortKey => $sortDir) {
-                    if ($params['sort']!='') {
-                        $params['sort'] .= ',';
-                    }
-                    $queryBuilder->addOrderBy($sortKey, $sortDir);
-                }
+        $query = $this->query($collection);
+        foreach ($filters as $filter => $value) {
+            if (is_array($value)) {
+                $query->orFilters([$value]);
+            } else {
+                $query->andFilter($filter, $value);
             }
-            $queryBuilder->select($fields)
-                ->setFirstResult($start)
-                ->setMaxResults($limit);
-            $stmt = $this->conn->executeQuery($queryBuilder->getSql(), $queryBuilder->getParameters());
-            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         }
-        return ['total' => $numberOfSet, 'data' => $result];
+        return $query->returnFields($fields)
+            ->sortFields($sort)
+            ->offset($offset)
+            ->limit($limit)
+            ->run();
     }
 
     public function buildQuery($collection, $filters)
     {
-        $queryBuilder = $this->conn->createQueryBuilder();
+        $queryBuilder = $this->doctrine->createQueryBuilder();
         $queryBuilder->from($collection);
         if ($filters !== null) {
             foreach ($filters as $key => $value) {
@@ -179,10 +162,9 @@ class SQL implements Base
                         $subKey = array_keys($orValue)[0];
                         $subValue = $orValue[$subKey];
                         $sqlOptions = self::buildFilter([$subKey => $subValue]);
-                        if(in_array($sqlOptions['method'], ['in', 'notIn'])){
+                        if (in_array($sqlOptions['method'], ['in', 'notIn'])) {
                             $orQuery[] =  $queryBuilder->expr()->{$sqlOptions['method']}( $sqlOptions['key'], $sqlOptions['value']);
-                        }
-                        else{
+                        } else {
                             $orQuery[] =
                                 '`'.$sqlOptions['key'].'`'
                                 . ' ' . $sqlOptions['operand']
@@ -190,16 +172,15 @@ class SQL implements Base
                         }
                     }
                     $queryBuilder->andWhere(
-                        implode(' OR ', $orQuery)
+                        '(' . implode(' OR ', $orQuery) . ')'
                     );
                 } else {
                     $sqlOptions = self::buildFilter([$key=>$value]);
-                    if(in_array($sqlOptions['method'], ['in', 'notIn', ''])){
+                    if (in_array($sqlOptions['method'], ['in', 'notIn'])) {
                         $queryBuilder->andWhere(
                             $queryBuilder->expr()->{$sqlOptions['method']}( $sqlOptions['key'], $sqlOptions['value'])
                         );
-                    }
-                    else{
+                    } else {
                         $queryBuilder->andWhere(
                             '`'.$sqlOptions['key'].'`'
                             . ' ' . $sqlOptions['operand']
@@ -212,8 +193,6 @@ class SQL implements Base
         return $queryBuilder;
     }
 
-
-
     public function query($collection)
     {
         return new SQLQueryBuilder($collection, $this);
@@ -225,36 +204,23 @@ class SQL implements Base
         $value = $filter[$key];
         $operator = ' = ';
         $method = 'eq';
-
-        $methods = [
-            'gte'   => 'gte',
-            'gt'    => 'gt',
-            'lte'   => 'lte',
-            'lt'    => 'lt',
-            'in'    => 'in',
-            '!in'   => 'notIn',
-            'not'   => 'not',
-            'wildchard' => 'like',
-            'prefix' => 'like',
+        $options =[
+            'gte'       => ['method' => 'gte', 'operand' => ' >= '],
+            'gt'        => ['method' => 'gt', 'operand' => ' > '],
+            'lte'       => ['method' => 'lte', 'operand' => ' <= '],
+            'lt'        => ['method' => 'lt', 'operand' => ' < '],
+            'in'        => ['method' => 'in', 'operand' => ' IN '],
+            '!in'       => ['method' => 'notIn', 'operand' => ' NOT IN '],
+            'not'       => ['method' => 'not', 'operand' => ' NOT '],
+            'wildcard'  => ['method' => 'like', 'operand' => ' LIKE '],
+            'prefix'    => ['method' => 'like', 'operand' => ' LIKE '],
         ];
-        $operands = [
-            'gte'   => ' >= ',
-            'gt'    => ' > ',
-            'lte'   => ' <= ',
-            'lt'    => ' < ',
-            'in'    => ' IN ',
-            '!in'   => ' NOT IN',
-            'not'   => ' NOT',
-            'wildchard' => ' LIKE ',
-            'prefix' => ' LIKE ',
-        ];
-
-        if (strpos($key, '__')!==false) {
+        if (strpos($key, '__') !== false) {
             preg_match('/__(.*?)$/i', $key, $matches);
             $key        = str_replace($matches[0], '', $key);
             $operator   = $matches[1];
-            $method     = $methods[$operator];
-            $operator   = $operands[$operator];
+            $method     = $options[$operator]['method'];
+            $operator   = $options[$operator]['operand'];
             switch ($operator) {
                 case 'wildcard':
                     $value = str_replace(array('?', '*'), array('_', '%'), $value);
@@ -270,8 +236,6 @@ class SQL implements Base
             'method'    => $method,
             'value'     => $value
         ];
-
     }
-
 
 }

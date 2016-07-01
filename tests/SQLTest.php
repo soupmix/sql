@@ -34,7 +34,13 @@ class SQLTest extends \PHPUnit_Framework_TestCase
             ['name' => 'balance','type'=>'float', 'maxLength' => 3, 'default' => 0.0],
             ['name' => 'date','type'=>'datetime']
         ];
-
+        $fields = [
+            ['name' => 'title','type' => 'string', 'index' => true, 'index_type' => 'unique'],
+            ['name' => 'age','type' =>'smallint', 'maxLength' => 3, 'default' => 24, 'index' => true],
+            ['name' => 'count','type'=>'smallint', 'maxLength' => 3, 'default' => 0, 'index' => true ],
+            ['name' => 'balance','type'=>'float', 'maxLength' => 3, 'default' => 0.0],
+            ['name' => 'date','type'=>'datetime']
+        ];
         $this->client->drop('test');
         $this->client->create('test', $fields);
     }
@@ -71,7 +77,7 @@ class SQLTest extends \PHPUnit_Framework_TestCase
         $this->assertGreaterThanOrEqual(2, $results['total'],
             'Total not greater than or equal to 2 on count_gte filtering');
 
-        $results = $this->client->find('test', [[['count__gte' => ';SELEC * FTOM'], ['count__gte' => 2]]]);
+        $results = $this->client->find('test', [[['count__gte' => 12], ['count__gte' => 2]]]);
         $this->assertGreaterThanOrEqual(1, $results['total'],
             'Total not greater than or equal to 2 on count__gte and count__gte filtering');
 

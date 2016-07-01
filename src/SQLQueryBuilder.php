@@ -32,8 +32,11 @@ class SQLQueryBuilder extends AbstractQueryBuilder
 
     private function getQueryBuilder()
     {
-        $this->andFilters[] = $this->orFilters;
+        if ($this->orFilters !== null){
+            $this->andFilters[] = $this->orFilters;
+        }
         $this->filters      = $this->andFilters;
+
         return $this->soupmix->buildQuery($this->collection, $this->filters);
     }
 
