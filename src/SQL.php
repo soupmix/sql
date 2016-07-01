@@ -151,11 +151,11 @@ class SQL implements Base
             $fields = ($fields === null) ? "*" : $fields;
             if ($sort !== null) {
                 $params['sort'] = '';
-                foreach ($sort as $sort_key => $sort_dir) {
+                foreach ($sort as $sortKey => $sortDir) {
                     if ($params['sort']!='') {
                         $params['sort'] .= ',';
                     }
-                    $queryBuilder->addOrderBy($sort_key, $sort_dir);
+                    $queryBuilder->addOrderBy($sortKey, $sortDir);
                 }
             }
             $queryBuilder->select($fields)
@@ -189,7 +189,6 @@ class SQL implements Base
                                 . ' ' . $queryBuilder->createNamedParameter($sqlOptions['value']);
                         }
                     }
-
                     $queryBuilder->andWhere(
                         implode(' OR ', $orQuery)
                     );
@@ -210,7 +209,6 @@ class SQL implements Base
                 }
             }
         }
-
         return $queryBuilder;
     }
 
