@@ -106,6 +106,37 @@ class SQLTest extends \PHPUnit_Framework_TestCase
                 $docIds[] = $docId;
             }
         }
+
+        $query = $this->client->query('test');
+        $results = $query->andFilter('balance__gte', 55)
+            ->orFilter('count__in', [2,3,4,5])
+            ->returnFields(['title','date'])
+            ->run();
+        $this->assertEquals(4, $results['total']);
+
+        $query = $this->client->query('test');
+        $results = $query->andFilter('balance__gte', 55)
+            ->andFilter('title__wildcard', '5')
+            ->orFilter('count__in', [2,3,4,5])
+            ->returnFields(['title','date'])
+            ->run();
+        $this->assertEquals(1, $results['total']);
+
+        $query = $this->client->query('test');
+        $results = $query->andFilter('date__prefix', '2015-04-12')
+            ->returnFields(['title','date'])
+            ->run();
+        $this->assertEquals(2, $results['total']);
+
+        $query = $this->client->query('test');
+        $results = $query->andFilter('balance__gte', 55)
+            ->andFilter('date__gte', '2015-04-12 00:00:00')
+            ->orFilter('count__in', [2,3,4,5])
+            ->orFilter('balance__gte', 250)
+            ->returnFields(['title','date'])
+            ->run();
+        $this->assertEquals(5, $results['total']);
+
         $query = $this->client->query('test');
         $results = $query->andFilter('balance__gte', 55)
             ->orFilter('count__in', [2,3,4,5])
@@ -113,6 +144,17 @@ class SQLTest extends \PHPUnit_Framework_TestCase
             ->returnFields(['title','date'])
             ->run();
         $this->assertEquals(6, $results['total']);
+
+        $query = $this->client->query('test');
+        $results = $query->andFilter('balance__gte', 55)
+            ->andFilter('date__gte', '2015-04-12 00:00:00')
+            ->orFilter('count__in', [2,3,4,5])
+            ->orFilter('balance__gte', 250)
+            ->returnFields(['title','date'])
+            ->run();
+        $this->assertEquals(5, $results['total']);
+
+        $query = $this->client->query('test');
         $results = $query->andFilter('balance__gte', 55)
             ->orFilter('count__in', [2,3,4,5])
             ->orFilter('balance__gte', 250)

@@ -12,6 +12,7 @@ class SQLQueryBuilder extends AbstractQueryBuilder
         $this->queryBuilder = $this->getQueryBuilder();
         $count = $this->getCount();
         $numberOfRows = 0;
+        $result = null;
         if (isset($count[0]['total']) && ($count[0]['total']>0)) {
             $numberOfRows = $count[0]['total'];
             $this->setSortOrders();

@@ -218,12 +218,12 @@ class SQL implements Base
         if (strpos($key, '__') !== false) {
             preg_match('/__(.*?)$/i', $key, $matches);
             $key        = str_replace($matches[0], '', $key);
-            $operator   = $matches[1];
-            $method     = $options[$operator]['method'];
-            $operator   = $options[$operator]['operand'];
-            switch ($operator) {
+            $queryOperator   = $matches[1];
+            $method     = $options[$queryOperator]['method'];
+            $operator   = $options[$queryOperator]['operand'];
+            switch ($queryOperator) {
                 case 'wildcard':
-                    $value = str_replace(array('?', '*'), array('_', '%'), $value);
+                    $value = '%'.str_replace(array('?', '*'), array('_', '%'), $value).'%';
                     break;
                 case 'prefix':
                     $value = $value.'%';
