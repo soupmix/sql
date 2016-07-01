@@ -85,7 +85,6 @@ class SQLTest extends \PHPUnit_Framework_TestCase
         $this->assertGreaterThanOrEqual(1, $results['total'],
             'Total not greater than or equal to 2 on count__gte and count__gte filtering');
 
-
         $results = $this->client->find('test', [[['count__lte' => 8], ['count__gte' => 2]], 'balance__gte' => 55]);
         $this->assertEquals(9, $results['total'],
             'Total not equal to 9 on balance__gte, count__gte and count__gte filtering');

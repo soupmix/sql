@@ -36,7 +36,6 @@ class SQLQueryBuilder extends AbstractQueryBuilder
             $this->andFilters[] = $this->orFilters;
         }
         $this->filters      = $this->andFilters;
-
         return $this->soupmix->buildQuery($this->collection, $this->filters);
     }
 

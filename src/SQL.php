@@ -138,7 +138,7 @@ class SQL implements Base
         $query = $this->query($collection);
         foreach ($filters as $filter => $value) {
             if (is_array($value)) {
-                $query->orFilters([$value]);
+                $query->orFilters($value);
             } else {
                 $query->andFilter($filter, $value);
             }
