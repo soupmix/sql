@@ -48,8 +48,8 @@ class SQLQueryBuilder extends AbstractQueryBuilder
     private function setSortOrders()
     {
         if ($this->sortFields !== null) {
-            foreach ($this->sortFields as $sort_key => $sort_dir) {
-                $this->queryBuilder->addOrderBy($sort_key, $sort_dir);
+            foreach ($this->sortFields as $sortKey => $sortDir) {
+                $this->queryBuilder->addOrderBy($sortKey, $sortDir);
             }
         }
     }
