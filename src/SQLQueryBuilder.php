@@ -8,7 +8,7 @@ class SQLQueryBuilder extends AbstractQueryBuilder
 
     private $queryBuilder = null;
 
-    public function run(){
+    public function run() {
         $this->queryBuilder = $this->getQueryBuilder();
         $count = $this->getCount();
         if (!isset($count[0]['total']) || ($count[0]['total']==0)) {
@@ -18,12 +18,12 @@ class SQLQueryBuilder extends AbstractQueryBuilder
         $this->setSortOrders();
         $this->setReturnFields();
         $this->setOffsetAndLimit();
-        $stmt = $this->soupmix->getConnection()->executeQuery(
+        $stmt = $this->conn->executeQuery(
             $this->queryBuilder->getSql(),
             $this->queryBuilder->getParameters()
         );
         $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        if($this->distinctFieldName !== null){
+        if ($this->distinctFieldName !== null) {
                 $numberOfRows = count($result);
         }
         return ['total' => $numberOfRows, 'data' => $result];
@@ -31,7 +31,7 @@ class SQLQueryBuilder extends AbstractQueryBuilder
 
     private function getQueryBuilder()
     {
-        if ($this->orFilters !== null){
+        if ($this->orFilters !== null) {
             $this->andFilters[] = $this->orFilters;
         }
         $this->filters      = $this->andFilters;
@@ -42,7 +42,7 @@ class SQLQueryBuilder extends AbstractQueryBuilder
     {
         $queryBuilderCount = clone $this->queryBuilder;
         $queryBuilderCount->select(" COUNT(*) AS total ");
-        $stmt = $this->soupmix->getConnection()->executeQuery($queryBuilderCount->getSql(), $queryBuilderCount->getParameters());
+        $stmt = $this->conn->executeQuery($queryBuilderCount->getSql(), $queryBuilderCount->getParameters());
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 

@@ -13,7 +13,6 @@ class SQL implements Base
     protected $doctrine = null;
     protected $dbName = null;
 
-
     public function __construct($config, Connection $client)
     {
         $this->doctrine = $client;
@@ -32,7 +31,6 @@ class SQL implements Base
         return $table->createTable();
     }
 
-
     public function drop($collection)
     {
         $schemaManager = $this->doctrine->getSchemaManager();
@@ -49,7 +47,6 @@ class SQL implements Base
 
     public function createIndexes($collection, $fields)
     {
-
         $schemaManager = $this->doctrine->getSchemaManager();
         $table = new SQLTable($schemaManager, $collection, $fields);
         return $table->createOnlyIndexes();
@@ -58,7 +55,7 @@ class SQL implements Base
     public function insert($collection, $values)
     {
         $insertion = $this->doctrine->insert($collection, $values);
-        if($insertion !== 0) {
+        if ($insertion !== 0) {
             return $this->doctrine->lastInsertId();
         }
         return null;
@@ -72,10 +69,7 @@ class SQL implements Base
     public function delete($collection, $filter)
     {
         $numberOfDeletedItems = $this->doctrine->delete($collection, $filter);
-        if ($numberOfDeletedItems>0) {
-            return 1;
-        }
-        return 0;
+        return ($numberOfDeletedItems > 0) ? 1 : 0;
     }
 
     public function get($collection, $docId)
@@ -89,9 +83,9 @@ class SQL implements Base
         foreach ($filters as $filter => $value) {
             if (is_array($value)) {
                 $query->orFilters($value);
-            } else {
-                $query->andFilter($filter, $value);
+                continue;
             }
+            $query->andFilter($filter, $value);
         }
         return $query->returnFields($fields)
             ->sortFields($sort)
@@ -104,6 +98,5 @@ class SQL implements Base
     {
         return new SQLQueryBuilder($collection, $this);
     }
-
 
 }
