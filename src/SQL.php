@@ -52,7 +52,7 @@ class SQL implements Base
 
         $schemaManager = $this->doctrine->getSchemaManager();
         $table = new SQLTable($schemaManager, $collection, $fields);
-        return $table->createIndexes();
+        return $table->createOnlyIndexes();
     }
 
     public function insert($collection, $values)
