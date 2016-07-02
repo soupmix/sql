@@ -157,23 +157,7 @@ class SQL implements Base
         if ($filters !== null) {
             foreach ($filters as $key => $value) {
                 if (strpos($key, '__') === false && is_array($value)) {
-                    $orQuery =[];
-                    foreach ($value as $orValue) {
-                        $subKey = array_keys($orValue)[0];
-                        $subValue = $orValue[$subKey];
-                        $sqlOptions = self::buildFilter([$subKey => $subValue]);
-                        if (in_array($sqlOptions['method'], ['in', 'notIn'])) {
-                            $orQuery[] =  $queryBuilder->expr()->{$sqlOptions['method']}( $sqlOptions['key'], $sqlOptions['value']);
-                        } else {
-                            $orQuery[] =
-                                '`'.$sqlOptions['key'].'`'
-                                . ' ' . $sqlOptions['operand']
-                                . ' ' . $queryBuilder->createNamedParameter($sqlOptions['value']);
-                        }
-                    }
-                    $queryBuilder->andWhere(
-                        '(' . implode(' OR ', $orQuery) . ')'
-                    );
+                    $queryBuilder = $this->buildQueryForOr($queryBuilder, $value);
                 } else {
                     $sqlOptions = self::buildFilter([$key=>$value]);
                     if (in_array($sqlOptions['method'], ['in', 'notIn'])) {
@@ -190,6 +174,29 @@ class SQL implements Base
                 }
             }
         }
+        return $queryBuilder;
+    }
+
+    protected function buildQueryForOr($queryBuilder, $value)
+    {
+        $orQuery =[];
+        foreach ($value as $orValue) {
+            $subKey = array_keys($orValue)[0];
+            $subValue = $orValue[$subKey];
+            $sqlOptions = self::buildFilter([$subKey => $subValue]);
+            if (in_array($sqlOptions['method'], ['in', 'notIn'])) {
+                $orQuery[] =  $queryBuilder->expr()->{$sqlOptions['method']}( $sqlOptions['key'], $sqlOptions['value']);
+                continue;
+            }
+            $orQuery[] =
+                '`'.$sqlOptions['key'].'`'
+                . ' ' . $sqlOptions['operand']
+                . ' ' . $queryBuilder->createNamedParameter($sqlOptions['value']);
+
+        }
+        $queryBuilder->andWhere(
+            '(' . implode(' OR ', $orQuery) . ')'
+        );
         return $queryBuilder;
     }
 
