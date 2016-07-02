@@ -11,22 +11,20 @@ class SQLQueryBuilder extends AbstractQueryBuilder
     public function run(){
         $this->queryBuilder = $this->getQueryBuilder();
         $count = $this->getCount();
-        $numberOfRows = 0;
-        $result = null;
-        if (isset($count[0]['total']) && ($count[0]['total']>0)) {
-            $numberOfRows = $count[0]['total'];
-            $this->setSortOrders();
-            $this->setReturnFields();
-            $this->setOffsetAndLimit();
-            $stmt = $this->soupmix->getConnection()
-                ->executeQuery(
-                    $this->queryBuilder->getSql(),
-                    $this->queryBuilder->getParameters()
-                );
-            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-            if($this->distinctFieldName !== null){
+        if (!isset($count[0]['total']) || ($count[0]['total']==0)) {
+            return ['total' => 0, 'data' => null];
+        }
+        $numberOfRows = $count[0]['total'];
+        $this->setSortOrders();
+        $this->setReturnFields();
+        $this->setOffsetAndLimit();
+        $stmt = $this->soupmix->getConnection()->executeQuery(
+            $this->queryBuilder->getSql(),
+            $this->queryBuilder->getParameters()
+        );
+        $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        if($this->distinctFieldName !== null){
                 $numberOfRows = count($result);
-            }
         }
         return ['total' => $numberOfRows, 'data' => $result];
     }

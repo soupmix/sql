@@ -130,7 +130,7 @@ class SQL implements Base
 
     public function get($collection, $docId)
     {
-        return $this->doctrine->fetchAssoc('SELECT * FROM '.$collection.' WHERE id = ?', array($docId));
+        return $this->doctrine->fetchAssoc('SELECT * FROM ' . $collection . ' WHERE id = ?', array($docId));
     }
 
     public function find($collection, $filters, $fields = null, $sort = null, $offset = 0, $limit = 25, $debug = false)
