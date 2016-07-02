@@ -44,6 +44,18 @@ class SQL implements Base
         $columns[] = new Column('id', Type::getType('integer'), ['unsigned' => true, 'autoincrement' => true] );
         $indexes[] = new Index($collection.'_PK', ['id'], false, true);
         $tmpIndexes = [];
+
+        $columns = $this->createAddColumns($collection, $columns, $fields);
+
+        if(count($tmpIndexes)>0){
+            $indexes[] = new Index($collection . '_IDX', $tmpIndexes, false, false);
+        }
+        $table = new Table($collection, $columns, $indexes);
+        return $schemaManager->createTable($table);
+    }
+
+    protected function createAddColumns($collection, $columns, $fields)
+    {
         foreach ($fields as $field){
             $field = array_merge(self::$columnDefaults, $field);
             $options = [];
@@ -61,11 +73,8 @@ class SQL implements Base
             }
             $columns[] = new Column($field['name'], Type::getType($field['type']), $options );
         }
-        if(count($tmpIndexes)>0){
-            $indexes[] = new Index($collection . '_IDX', $tmpIndexes, false, false);
-        }
-        $table = new Table($collection, $columns, $indexes);
-        return $schemaManager->createTable($table);
+
+        return $columns;
     }
 
     public function drop($collection)
