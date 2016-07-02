@@ -158,25 +158,29 @@ class SQL implements Base
             foreach ($filters as $key => $value) {
                 if (strpos($key, '__') === false && is_array($value)) {
                     $queryBuilder = $this->buildQueryForOr($queryBuilder, $value);
-                } else {
-                    $sqlOptions = self::buildFilter([$key=>$value]);
-                    if (in_array($sqlOptions['method'], ['in', 'notIn'])) {
-                        $queryBuilder->andWhere(
-                            $queryBuilder->expr()->{$sqlOptions['method']}( $sqlOptions['key'], $sqlOptions['value'])
-                        );
-                    } else {
-                        $queryBuilder->andWhere(
-                            '`'.$sqlOptions['key'].'`'
-                            . ' ' . $sqlOptions['operand']
-                            . ' ' . $queryBuilder->createNamedParameter($sqlOptions['value'])
-                        );
-                    }
+                    continue;
                 }
+                $queryBuilder = $this->buildQueryForAnd($queryBuilder, $key, $value);
             }
         }
         return $queryBuilder;
     }
-
+    protected function buildQueryForAnd($queryBuilder, $key, $value)
+    {
+        $sqlOptions = self::buildFilter([$key => $value]);
+        if (in_array($sqlOptions['method'], ['in', 'notIn'])) {
+            $queryBuilder->andWhere(
+                $queryBuilder->expr()->{$sqlOptions['method']}( $sqlOptions['key'], $sqlOptions['value'])
+            );
+            return $queryBuilder;
+        }
+        $queryBuilder->andWhere(
+                '`'.$sqlOptions['key'].'`'
+                . ' ' . $sqlOptions['operand']
+                . ' ' . $queryBuilder->createNamedParameter($sqlOptions['value'])
+            );
+        return $queryBuilder;
+    }
     protected function buildQueryForOr($queryBuilder, $value)
     {
         $orQuery =[];
