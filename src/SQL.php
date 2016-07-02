@@ -6,24 +6,13 @@ SQL Adapter
 */
 
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\Schema\Table;
-use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Types\Type;
-use Doctrine\DBAL\Schema\Index;
+
 
 class SQL implements Base
 {
     protected $doctrine = null;
     protected $dbName = null;
-    protected static $columnDefaults = [
-        'name'      => null,
-        'type'      => 'string',
-        'type_info' => null,
-        'maxLength' => 255,
-        'default'   => null,
-        'index'     => null,
-        'index_type'=> null,
-]   ;
+
 
     public function __construct($config, Connection $client)
     {
@@ -38,52 +27,19 @@ class SQL implements Base
 
     public function create($collection, $fields)
     {
-        $columns = [];
-        $indexes = [];
         $schemaManager = $this->doctrine->getSchemaManager();
-        $columns[] = new Column('id', Type::getType('integer'), ['unsigned' => true, 'autoincrement' => true] );
-        $indexes[] = new Index($collection.'_PK', ['id'], false, true);
-
-        list($columns, $indexes, $tmpIndexes) = $this->createAddColumns($collection, $columns, $indexes, $fields);
-        if(count($tmpIndexes)>0){
-            $indexes[] = new Index($collection . '_IDX', $tmpIndexes, false, false);
-        }
-        $table = new Table($collection, $columns, $indexes);
-        return $schemaManager->createTable($table);
+        $table = new SQLTable($schemaManager, $collection, $fields);
+        return $table->createTable();
     }
 
-    protected function createAddColumns($collection, $columns, $indexes, $fields)
-    {
-        $tmpIndexes = [];
-        foreach ($fields as $field){
-            $field = array_merge(self::$columnDefaults, $field);
-            $options = [];
-            if ($field['type'] == 'integer' && $field['type_info'] == 'unsigned') {
-                $options['unsigned'] = true;
-            }
-            $options['length'] = $field['maxLength'];
-            $options['default'] = $field['default'];
-            if ($field['index'] !== null) {
-                if ( $field['index_type'] == 'unique' ) {
-                    $indexes[] = new Index($collection . '_' . $field['name'] . '_UNQ', [$field['name']], true, false);
-                } else {
-                    $tmpIndexes[] = $field['name'];
-                }
-            }
-            $columns[] = new Column($field['name'], Type::getType($field['type']), $options );
-        }
-
-        return [ $columns, $indexes, $tmpIndexes];
-    }
 
     public function drop($collection)
     {
         $schemaManager = $this->doctrine->getSchemaManager();
         if ($schemaManager->tablesExist([$collection])) {
             return $schemaManager->dropTable($collection);
-        } else {
-            return null;
         }
+        return null;
     }
 
     public function truncate($collection)
@@ -91,26 +47,12 @@ class SQL implements Base
         return $this->client->doctrine->query('TRUNCATE TABLE `' . $collection . '`');
     }
 
-    public function createIndexes($collection, $indexes)
+    public function createIndexes($collection, $fields)
     {
+
         $schemaManager = $this->doctrine->getSchemaManager();
-        $tmpIndexes = [];
-        foreach ($indexes as $field){
-            $field = array_merge(self::$columnDefaults, $field);
-            if ($field['index'] !== null) {
-                if ( $field['index_type'] == 'unique' ) {
-                    $indexes[] = new Index($collection . '_' . $field['name'] . '_UNQ', [$field['name']], true, false);
-                } else {
-                    $tmpIndexes[] = $field['name'];
-                }
-            }
-        }
-        if (count($tmpIndexes) > 0) {
-            $indexes[] = new Index($collection . '_IDX', $tmpIndexes, false, false);
-        }
-        foreach ($indexes as $index) {
-            $schemaManager->createIndex($index, $collection);
-        }
+        $table = new SQLTable($schemaManager, $collection, $fields);
+        return $table->createIndexes();
     }
 
     public function insert($collection, $values)
