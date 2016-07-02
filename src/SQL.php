@@ -77,7 +77,7 @@ class SQL implements Base
         return $this->doctrine->fetchAssoc('SELECT * FROM ' . $collection . ' WHERE id = ?', array($docId));
     }
 
-    public function find($collection, $filters, $fields = null, $sort = null, $offset = 0, $limit = 25, $debug = false)
+    public function find($collection, $filters, $fields = null, $sort = null, $offset = 0, $limit = 25)
     {
         $query = $this->query($collection);
         foreach ($filters as $filter => $value) {
