@@ -43,10 +43,8 @@ class SQL implements Base
         $schemaManager = $this->doctrine->getSchemaManager();
         $columns[] = new Column('id', Type::getType('integer'), ['unsigned' => true, 'autoincrement' => true] );
         $indexes[] = new Index($collection.'_PK', ['id'], false, true);
-        $tmpIndexes = [];
 
-        $columns = $this->createAddColumns($collection, $columns, $fields);
-
+        list($columns, $indexes, $tmpIndexes) = $this->createAddColumns($collection, $columns, $indexes, $fields);
         if(count($tmpIndexes)>0){
             $indexes[] = new Index($collection . '_IDX', $tmpIndexes, false, false);
         }
@@ -54,8 +52,9 @@ class SQL implements Base
         return $schemaManager->createTable($table);
     }
 
-    protected function createAddColumns($collection, $columns, $fields)
+    protected function createAddColumns($collection, $columns, $indexes, $fields)
     {
+        $tmpIndexes = [];
         foreach ($fields as $field){
             $field = array_merge(self::$columnDefaults, $field);
             $options = [];
@@ -74,7 +73,7 @@ class SQL implements Base
             $columns[] = new Column($field['name'], Type::getType($field['type']), $options );
         }
 
-        return $columns;
+        return [ $columns, $indexes, $tmpIndexes];
     }
 
     public function drop($collection)
