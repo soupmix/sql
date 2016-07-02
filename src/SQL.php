@@ -154,19 +154,20 @@ class SQL implements Base
     {
         $queryBuilder = $this->doctrine->createQueryBuilder();
         $queryBuilder->from($collection);
+        if ($filters === null) {
+            return $queryBuilder;
+        }
         return $this->buildQueryFilters($queryBuilder, $filters);
-
     }
+
     protected function buildQueryFilters($queryBuilder, $filters)
     {
-        if ($filters !== null) {
-            foreach ($filters as $key => $value) {
-                if (strpos($key, '__') === false && is_array($value)) {
-                    $queryBuilder = $this->buildQueryForOr($queryBuilder, $value);
-                    continue;
-                }
-                $queryBuilder = $this->buildQueryForAnd($queryBuilder, $key, $value);
+        foreach ($filters as $key => $value) {
+            if (strpos($key, '__') === false && is_array($value)) {
+                $queryBuilder = $this->buildQueryForOr($queryBuilder, $value);
+                continue;
             }
+            $queryBuilder = $this->buildQueryForAnd($queryBuilder, $key, $value);
         }
         return $queryBuilder;
     }
