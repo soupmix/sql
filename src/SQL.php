@@ -154,6 +154,11 @@ class SQL implements Base
     {
         $queryBuilder = $this->doctrine->createQueryBuilder();
         $queryBuilder->from($collection);
+        return $this->buildQueryFilters($queryBuilder, $filters);
+
+    }
+    protected function buildQueryFilters($queryBuilder, $filters)
+    {
         if ($filters !== null) {
             foreach ($filters as $key => $value) {
                 if (strpos($key, '__') === false && is_array($value)) {
@@ -165,6 +170,7 @@ class SQL implements Base
         }
         return $queryBuilder;
     }
+
     protected function buildQueryForAnd($queryBuilder, $key, $value)
     {
         $sqlOptions = self::buildFilter([$key => $value]);
