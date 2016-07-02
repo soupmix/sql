@@ -64,9 +64,9 @@ class SQLTable
             if ($field['index'] !== null) {
                 if ( $field['index_type'] == 'unique' ) {
                     $this->indexes[] = new Index($this->collection . '_' . $field['name'] . '_UNQ', [$field['name']], true, false);
-                } else {
-                    $this->tmpIndexes[] = $field['name'];
+                    continue;
                 }
+                $this->tmpIndexes[] = $field['name'];
             }
         }
         if(count($this->tmpIndexes)>0){
