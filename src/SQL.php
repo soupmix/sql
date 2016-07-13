@@ -8,7 +8,7 @@ SQL Adapter
 use Doctrine\DBAL\Connection;
 
 
-class SQL implements Base
+final class SQL implements Base
 {
     protected $doctrine = null;
     protected $dbName = null;

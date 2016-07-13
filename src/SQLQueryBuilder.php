@@ -10,14 +10,15 @@ class SQLQueryBuilder extends AbstractQueryBuilder
 
     public function run() {
         $this->queryBuilder = $this->getQueryBuilder();
+        $this->setJoins();
         $count = $this->getCount();
         if (!isset($count[0]['total']) || ($count[0]['total']==0)) {
             return ['total' => 0, 'data' => null];
         }
         $numberOfRows = $count[0]['total'];
         $this->setSortOrders();
-        $this->setReturnFields();
         $this->setOffsetAndLimit();
+        $this->setReturnFields();
         $stmt = $this->conn->executeQuery(
             $this->queryBuilder->getSql(),
             $this->queryBuilder->getParameters()
@@ -49,8 +50,51 @@ class SQLQueryBuilder extends AbstractQueryBuilder
     private function setSortOrders()
     {
         if ($this->sortFields !== null) {
-            foreach ($this->sortFields as $sortKey => $sortDir) {
+            foreach ($this->addAlias($this->sortFields) as $sortKey => $sortDir) {
                 $this->queryBuilder->addOrderBy($sortKey, $sortDir);
+            }
+        }
+    }
+
+    private function setJoins()
+    {
+        $this->setJoinsForType('innerJoin');
+        $this->setJoinsForType('leftJoin');
+        $this->setJoinsForType('rightJoin');
+        $this->setJoinsForType('outerJoin');
+    }
+
+    private function setJoinsForType($joinType)
+    {
+        if (is_null($this->{$joinType})) {
+           return;
+        }
+        foreach ($this->{$joinType} as $collectionName => $collection) {
+            $fieldNames = $this->addAlias($collection['returnFields'], $collectionName);
+            $this->returnFieldsForJoin($fieldNames);
+            $joinCondition = '';
+            foreach ($collection['relations'] as $relation) {
+                $joinCondition .= ($joinCondition=='') ? '':' AND ';
+                $relationType = array_keys($relation)[0];
+                $source = array_keys($relation[$relationType])[0];
+                $condition = $collectionName . "." . $source
+                    . " = " . $this->collection . "." . $relation[$relationType][$source];
+                if($relationType != 'field') {
+                    $condition = $collectionName . "." . $source . " "
+                        . $relationType . " " . $relation[$relationType][$source];
+                }
+                $joinCondition .= $condition;
+            }
+            $this->queryBuilder->$joinType($this->collection, $collectionName, $collectionName, $joinCondition);
+
+        }
+        return $this;
+    }
+    public function returnFieldsForJoin(array $fieldNames=null)
+    {
+        if($fieldNames !== null ) {
+            foreach ($fieldNames as $fieldName) {
+                $this->fieldNames[] = $fieldName;
             }
         }
     }
@@ -58,11 +102,11 @@ class SQLQueryBuilder extends AbstractQueryBuilder
     private function setReturnFields()
     {
         if ($this->distinctFieldName === null) {
-            $fieldNames = ($this->fieldNames === null) ? "*" : $this->fieldNames;
+            $fieldNames = ($this->fieldNames === null) ? $this->addAlias("*") : $this->addAlias($this->fieldNames);
             $this->queryBuilder->select($fieldNames);
             return;
         }
-        $this->queryBuilder->select('DISTINCT (`' . $this->distinctFieldName . '`)');
+        $this->queryBuilder->select('DISTINCT (`' . $this->collection . "`.`" . $this->distinctFieldName . '`)');
     }
 
     private function setOffsetAndLimit()
@@ -71,11 +115,34 @@ class SQLQueryBuilder extends AbstractQueryBuilder
             ->setMaxResults($this->limit);
     }
 
+    private function addAlias($fields, $collection=null)
+    {
+        $collection = (!is_null($collection)) ? $collection : $this->collection;
+        if (!is_array($fields)) {
+            return  $collection . "." . $fields;
+        }
+        if (!is_array($fields)) {
+           return  $collection . "." . $fields;
+        }
+        $newFields = [];
+        foreach ($fields as $field => $value){
+            if(is_int($field)){
+                if (!is_array($fields)) {
+                    $newFields[] = $collection . "." . $fields;
+                    continue;
+                }
+                $newFields[] = $collection . "." . $value;
+                continue;
+            }
+            $newFields[$collection.".".$field] = $value;
+        }
+        return $newFields;
+    }
 
     protected function buildQuery($collection, $filters)
     {
         $queryBuilder = $this->conn->createQueryBuilder();
-        $queryBuilder->from($collection);
+        $queryBuilder->from($collection, $collection);
         if ($filters === null) {
             return $queryBuilder;
         }
@@ -99,12 +166,12 @@ class SQLQueryBuilder extends AbstractQueryBuilder
         $sqlOptions = self::buildFilter([$key => $value]);
         if (in_array($sqlOptions['method'], ['in', 'notIn'])) {
             $queryBuilder->andWhere(
-                $queryBuilder->expr()->{$sqlOptions['method']}( $sqlOptions['key'], $sqlOptions['value'])
+                $queryBuilder->expr()->{$sqlOptions['method']}($this->collection . "." . $sqlOptions['key'], $sqlOptions['value'])
             );
             return $queryBuilder;
         }
         $queryBuilder->andWhere(
-            '`'.$sqlOptions['key'].'`'
+            '`' . $this->collection . "`.`" . $sqlOptions['key'].'`'
             . ' ' . $sqlOptions['operand']
             . ' ' . $queryBuilder->createNamedParameter($sqlOptions['value'])
         );
@@ -118,14 +185,13 @@ class SQLQueryBuilder extends AbstractQueryBuilder
             $subValue = $orValue[$subKey];
             $sqlOptions = self::buildFilter([$subKey => $subValue]);
             if (in_array($sqlOptions['method'], ['in', 'notIn'])) {
-                $orQuery[] =  $queryBuilder->expr()->{$sqlOptions['method']}( $sqlOptions['key'], $sqlOptions['value']);
+                $orQuery[] =  $queryBuilder->expr()->{$sqlOptions['method']}($this->collection . "." . $sqlOptions['key'], $sqlOptions['value']);
                 continue;
             }
             $orQuery[] =
-                '`'.$sqlOptions['key'].'`'
+                '`' . $this->collection . "`.`" . $sqlOptions['key'].'`'
                 . ' ' . $sqlOptions['operand']
                 . ' ' . $queryBuilder->createNamedParameter($sqlOptions['value']);
-
         }
         $queryBuilder->andWhere(
             '(' . implode(' OR ', $orQuery) . ')'

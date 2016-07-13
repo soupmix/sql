@@ -28,21 +28,21 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 
         $this->client = new SQL(['db_name'=>$config['dbname']], $client);
         $fields = [
-            ['name' => 'title','type' => 'string', 'index' => true, 'index_type' => 'unique'],
-            ['name' => 'age','type' =>'smallint', 'maxLength' => 3, 'default' => 24, 'index' => true],
-            ['name' => 'count','type'=>'smallint', 'maxLength' => 3, 'default' => 0, 'index' => true ],
-            ['name' => 'balance','type'=>'float', 'maxLength' => 3, 'default' => 0.0],
-            ['name' => 'date','type'=>'datetime']
+            ['name' => 'title', 'type' => 'string', 'index' => true, 'index_type' => 'unique'],
+            ['name' => 'age', 'type' =>'smallint', 'maxLength' => 3, 'default' => 24, 'index' => true],
+            ['name' => 'count', 'type'=>'smallint', 'maxLength' => 3, 'default' => 0, 'index' => true ],
+            ['name' => 'balance', 'type'=>'float', 'maxLength' => 3, 'default' => 0.0],
+            ['name' => 'date', 'type'=>'datetime']
         ];
-        $fields = [
-            ['name' => 'title','type' => 'string', 'index' => true, 'index_type' => 'unique'],
-            ['name' => 'age','type' =>'smallint', 'maxLength' => 3, 'default' => 24, 'index' => true],
-            ['name' => 'count','type'=>'smallint', 'maxLength' => 3, 'default' => 0, 'index' => true ],
-            ['name' => 'balance','type'=>'float', 'maxLength' => 3, 'default' => 0.0],
-            ['name' => 'date','type'=>'datetime']
+        $fields2 = [
+            ['name' => 'title2', 'type' => 'string', 'index' => true, 'index_type' => 'unique'],
+            ['name' => 'test_id', 'type' =>'integer', 'maxLength' => 11,  'index' => true],
+            ['name' => 'count', 'type' =>'integer', 'maxLength' => 11, 'default' => 0, 'index' => true]
         ];
         $this->client->drop('test');
         $this->client->create('test', $fields);
+        $this->client->drop('test2');
+        $this->client->create('test2', $fields2);
     }
 
 
@@ -106,6 +106,15 @@ class SQLTest extends \PHPUnit_Framework_TestCase
                 $docIds[] = $docId;
             }
         }
+        $docIds2 = [];
+        $data = $this->bulkData2();
+        foreach ($data as $d) {
+            $docId = $this->client->insert('test2', $d);
+            $this->assertNotNull($docId, 'Document could not inserted to SQL while testing find');
+            if ($docId) {
+                $docIds2[] = $docId;
+            }
+        }
 
         $query = $this->client->query('test');
         $results = $query->andFilter('balance__gte', 55)
@@ -161,6 +170,25 @@ class SQLTest extends \PHPUnit_Framework_TestCase
             ->distinctField('balance')
             ->run();
         $this->assertEquals(5, $results['total']);
+
+        $query = $this->client->query('test');
+        $results = $query->andFilter('balance__gte', 55)
+            ->returnField("*")
+            ->orFilter('count__in', [2,3,4,5])
+            ->orFilter('balance__gte', 250)
+            ->leftJoin('test2', [['field'=>['test_id'=>'id']], ['>'=>['count'=>10]] ], ['count as cc'])
+            ->run();
+        $this->assertEquals(6, $results['total']);
+
+        $query = $this->client->query('test');
+        $results = $query->andFilter('balance__gte', 55)
+            ->returnField("*")
+            ->orFilter('count__in', [2,3,4,5])
+            ->orFilter('balance__gte', 250)
+            ->innerJoin('test2', [['field'=>['test_id'=>'id']], ['>'=>['count'=>10]] ], ['count as cc'])
+            ->run();
+        $this->assertEquals(3, $results['total']);
+        $this->assertArrayHasKey('cc', $results['data'][0]);
     }
 
 
@@ -177,6 +205,22 @@ class SQLTest extends \PHPUnit_Framework_TestCase
             ['date' => '2015-04-20 00:00:00', 'title' => 'test8', 'balance' => 760.0, 'count' => 8],
             ['date' => '2015-04-20 00:00:00', 'title' => 'test9', 'balance' => 50.0, 'count' => 9],
             ['date' => '2015-04-21 00:00:00', 'title' => 'test0', 'balance' => 55.5, 'count' => 10],
+        ];
+    }
+
+    public function bulkData2()
+    {
+        return [
+            ['test_id' => 1, 'title2' => '2_test1', 'count' => 13],
+            ['test_id' => 2, 'title2' => '2_test2', 'count' => 33],
+            ['test_id' => 3, 'title2' => '2_test3', 'count' => 23],
+            ['test_id' => 4, 'title2' => '2_test4', 'count' => 5],
+            ['test_id' => 5, 'title2' => '2_test5', 'count' => 9],
+            ['test_id' => 6, 'title2' => '2_test6', 'count' => 17],
+            ['test_id' => 7, 'title2' => '2_test7', 'count' => 12],
+            ['test_id' => 8, 'title2' => '2_test8', 'count' => 1],
+            ['test_id' => 9, 'title2' => '2_test9', 'count' => 0],
+            ['test_id' => 10, 'title2' => '2_test10', 'count' => 3],
         ];
     }
 }
