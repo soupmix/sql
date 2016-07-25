@@ -125,8 +125,12 @@ class SQLQueryBuilder extends AbstractQueryBuilder
            return  $collection . "." . $fields;
         }
         $newFields = [];
-        foreach ($fields as $field => $value){
-            if(is_int($field)){
+        foreach ($fields as $field => $value) {
+            if (strpos($value, ".")!== false) {
+                $newFields[] = $value;
+                continue;
+            }
+            if (is_int($field)) {
                 if (!is_array($fields)) {
                     $newFields[] = $collection . "." . $fields;
                     continue;
