@@ -217,7 +217,7 @@ class SQLQueryBuilder extends AbstractQueryBuilder
             'lt'        => ['method' => 'lt', 'operand' => ' < '],
             'in'        => ['method' => 'in', 'operand' => ' IN '],
             '!in'       => ['method' => 'notIn', 'operand' => ' NOT IN '],
-            'not'       => ['method' => 'not', 'operand' => ' NOT '],
+            'not'       => ['method' => 'not', 'operand' => ' != '],
             'wildcard'  => ['method' => 'like', 'operand' => ' LIKE '],
             'prefix'    => ['method' => 'like', 'operand' => ' LIKE '],
         ];
