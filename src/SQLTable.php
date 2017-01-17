@@ -10,9 +10,9 @@ use Doctrine\DBAL\Schema\Index;
 
 class SQLTable
 {
-    protected $schemaManager = null;
-    protected $collection = null;
-    protected $fields = null;
+    protected $schemaManager ;
+    protected $collection;
+    protected $fields;
     protected $columns = [];
     protected $indexes = [];
     protected $tmpIndexes = [];
@@ -43,34 +43,48 @@ class SQLTable
 
     protected function buildColumns()
     {
-        $this->columns[] = new Column('id', Type::getType('integer'), ['unsigned' => true, 'autoincrement' => true] );
-        foreach ($this->fields as $field){
+        $this->columns[] = new Column(
+            'id',
+            Type::getType('integer'),
+            ['unsigned' => true, 'autoincrement' => true]
+        );
+        foreach ($this->fields as $field) {
             $field = array_merge(self::$columnDefaults, $field);
             $options = [];
-            if ($field['type'] == 'integer' && $field['type_info'] == 'unsigned') {
+            if ($field['type'] === 'integer' && $field['type_info'] === 'unsigned') {
                 $options['unsigned'] = true;
             }
             $options['length'] = $field['maxLength'];
-            $options['default'] = $field['default'];        
-            $this->columns[] = new Column($field['name'], Type::getType($field['type']), $options );
+            $options['default'] = $field['default'];
+            $this->columns[] = new Column($field['name'], Type::getType($field['type']), $options);
         }
     }
 
     protected function buildIndexes()
     {
         $this->indexes[] = new Index($this->collection.'_PK', ['id'], false, true);
-        foreach ($this->fields as $field){
+        foreach ($this->fields as $field) {
             $field = array_merge(self::$columnDefaults, $field);
             if ($field['index'] !== null) {
-                if ( $field['index_type'] == 'unique' ) {
-                    $this->indexes[] = new Index($this->collection . '_' . $field['name'] . '_UNQ', [$field['name']], true, false);
+                if ($field['index_type'] === 'unique') {
+                    $this->indexes[] = new Index(
+                        $this->collection . '_' . $field['name'] . '_UNQ',
+                        [$field['name']],
+                        true,
+                        false
+                    );
                     continue;
                 }
                 $this->tmpIndexes[] = $field['name'];
             }
         }
-        if(count($this->tmpIndexes)>0){
-            $this->indexes[] = new Index($this->collection . '_IDX', $this->tmpIndexes, false, false);
+        if (count($this->tmpIndexes)>0) {
+            $this->indexes[] = new Index(
+                $this->collection . '_IDX',
+                $this->tmpIndexes,
+                false,
+                false
+            );
         }
     }
 

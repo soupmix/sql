@@ -3,6 +3,7 @@ namespace tests;
 
 use Soupmix\SQL;
 use Doctrine\DBAL\DriverManager;
+
 class SQLTest extends \PHPUnit_Framework_TestCase
 {
     /**
@@ -50,7 +51,7 @@ class SQLTest extends \PHPUnit_Framework_TestCase
         $this->assertArrayHasKey('title', $document);
         $this->assertArrayHasKey('id', $document);
         $result = $this->client->delete('test', ['id' => $docId]);
-        $this->assertSame(1,$result);
+        $this->assertSame(1, $result);
     }
 
 
@@ -71,24 +72,36 @@ class SQLTest extends \PHPUnit_Framework_TestCase
         $this->assertArrayHasKey('title', $results['data'][0]);
 
         $results = $this->client->find('test', ['count__gte' => 6]);
-        $this->assertGreaterThanOrEqual(2, $results['total'],
-            'Total not greater than or equal to 2 on count_gte filtering');
+        $this->assertGreaterThanOrEqual(
+            2,
+            $results['total'],
+            'Total not greater than or equal to 2 on count_gte filtering'
+        );
 
         $results = $this->client->find('test', [[['count__gte' => 12], ['count__gte' => 2]]]);
-        $this->assertGreaterThanOrEqual(1, $results['total'],
-            'Total not greater than or equal to 2 on count__gte and count__gte filtering');
+        $this->assertGreaterThanOrEqual(
+            1,
+            $results['total'],
+            'Total not greater than or equal to 2 on count__gte and count__gte filtering'
+        );
 
         $results = $this->client->find('test', [[['count__lte' => 6], ['count__gte' => 2]], 'title' => 'test4']);
-        $this->assertGreaterThanOrEqual(1, $results['total'],
-            'Total not greater than or equal to 2 on count__gte and count__gte filtering');
+        $this->assertGreaterThanOrEqual(
+            1,
+            $results['total'],
+            'Total not greater than or equal to 2 on count__gte and count__gte filtering'
+        );
 
         $results = $this->client->find('test', [[['count__lte' => 8], ['count__gte' => 2]], 'balance__gte' => 55]);
-        $this->assertEquals(9, $results['total'],
-            'Total not equal to 9 on balance__gte, count__gte and count__gte filtering');
+        $this->assertEquals(
+            9,
+            $results['total'],
+            'Total not equal to 9 on balance__gte, count__gte and count__gte filtering'
+        );
 
         foreach ($docIds as $docId) {
             $result = $this->client->delete('test', ['id' => $docId]);
-            $this->assertSame(1,$result);
+            $this->assertSame(1, $result);
         }
     }
 
@@ -98,7 +111,6 @@ class SQLTest extends \PHPUnit_Framework_TestCase
         foreach ($data as $d) {
             $docId = $this->client->insert('test', $d);
             $this->assertNotNull($docId, 'Document could not inserted to SQL while testing find');
-
         }
         $data = $this->bulkData2();
         foreach ($data as $d) {

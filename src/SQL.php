@@ -1,12 +1,12 @@
 <?php
 
 namespace Soupmix;
+
 /*
 SQL Adapter
 */
 
 use Doctrine\DBAL\Connection;
-
 
 final class SQL implements Base
 {
@@ -98,5 +98,4 @@ final class SQL implements Base
     {
         return new SQLQueryBuilder($collection, $this);
     }
-
 }
