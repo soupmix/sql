@@ -8,20 +8,17 @@ class SQLTest extends \PHPUnit_Framework_TestCase
     /**
      * @var \Soupmix\SQL $client
      */
-    protected $client = null;
+    protected $client;
 
     protected function setUp()
     {
-        ini_set("date.timezone", "Europe/Istanbul");
+        ini_set('date.timezone', 'Europe/Istanbul');
 
         $config = [
-            'dbname'    => 'test',
-            'user'      => 'root',
-            'password'  => '',
-            'host'      => '127.0.0.1',
+            'dbname'    => 'test.db',
             'port'      => 3306,
             'charset'   => 'utf8',
-            'driver'    => 'pdo_mysql',
+            'driver'    => 'pdo_sqlite',
         ];
 
         $client = DriverManager::getConnection($config);
@@ -48,12 +45,12 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 
     public function testInsertGetDocument()
     {
-        $docId = $this->client->insert('test', ['id' => 1, 'title' => 'test','date' => date("Y-m-d H:i:s")]);
+        $docId = $this->client->insert('test', ['id' => 1, 'title' => 'test','date' => date('Y-m-d H:i:s')]);
         $document = $this->client->get('test', $docId);
         $this->assertArrayHasKey('title', $document);
         $this->assertArrayHasKey('id', $document);
         $result = $this->client->delete('test', ['id' => $docId]);
-        $this->assertTrue($result == 1);
+        $this->assertSame(1,$result);
     }
 
 
@@ -91,29 +88,22 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 
         foreach ($docIds as $docId) {
             $result = $this->client->delete('test', ['id' => $docId]);
-            $this->assertTrue($result == 1);
+            $this->assertSame(1,$result);
         }
     }
 
     public function testQueryBuilder()
     {
-        $docIds = [];
         $data = $this->bulkData();
         foreach ($data as $d) {
             $docId = $this->client->insert('test', $d);
             $this->assertNotNull($docId, 'Document could not inserted to SQL while testing find');
-            if ($docId) {
-                $docIds[] = $docId;
-            }
+
         }
-        $docIds2 = [];
         $data = $this->bulkData2();
         foreach ($data as $d) {
             $docId = $this->client->insert('test2', $d);
             $this->assertNotNull($docId, 'Document could not inserted to SQL while testing find');
-            if ($docId) {
-                $docIds2[] = $docId;
-            }
         }
 
         $query = $this->client->query('test');
@@ -173,7 +163,7 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 
         $query = $this->client->query('test');
         $results = $query->andFilter('balance__gte', 55)
-            ->returnField("*")
+            ->returnField('*')
             ->orFilter('count__in', [2,3,4,5])
             ->orFilter('balance__gte', 250)
             ->leftJoin('test2', [['field'=>['test_id'=>'id']], ['>'=>['count'=>10]] ], ['count as cc'])
@@ -182,7 +172,7 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 
         $query = $this->client->query('test');
         $results = $query->andFilter('balance__gte', 55)
-            ->returnField("*")
+            ->returnField('*')
             ->orFilter('count__in', [2,3,4,5])
             ->orFilter('balance__gte', 250)
             ->innerJoin('test2', [['field'=>['test_id'=>'id']], ['>'=>['count'=>10]] ], ['count as cc'])
