@@ -1,35 +1,35 @@
 {
-    "name": "soupmix/sql",
-    "type": "library",
-    "description": "Simple SQL abstraction layer adapter to handle CRUD operations.",
-    "keywords": ["database", "abstraction layer", "adapters", "sql", "doctrine", "dbal" ,"mysql", "postgresql", "msql", "microsoft sql server", "sqlite", "oracle"],
-    "homepage": "https://github.com/soupmix/sql",
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Mehmet Korkmaz",
-            "email": "mehmet@mkorkmaz.com",
-            "homepage": "https://mkorkmaz.com"
-        }
-    ],
-    "require": {
-        "soupmix/base": "~0.7.12",
-        "doctrine/dbal": "^2.5.5"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "5.4.*",
-        "satooshi/php-coveralls": "~1.0",
-        "phpunit/phpcov": "^3.1.0"
-    },
-    "autoload": {
-        "psr-4": {
-            "Soupmix\\": "src/"
-        }
-    },
-    "scripts": {
-        "test": [
-            "php vendor/bin/phpunit"
-        ],
-        "phpunit": "php vendor/bin/phpunit"
+  "name": "soupmix/sql",
+  "type": "library",
+  "description": "Simple SQL abstraction layer adapter to handle CRUD operations.",
+  "keywords": ["database", "abstraction layer", "adapters", "sql", "doctrine", "dbal" ,"mysql", "postgresql", "mssql", "microsoft sql server", "sqlite", "oracle"],
+  "homepage": "https://github.com/soupmix/sql",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Mehmet Korkmaz",
+      "email": "mehmet@mkorkmaz.com",
+      "homepage": "https://mkorkmaz.com"
     }
+  ],
+  "require": {
+    "soupmix/base": "~0.7.12",
+    "doctrine/dbal": "^2.5.8"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "5.4.*",
+    "satooshi/php-coveralls": "~1.0",
+    "phpunit/phpcov": "^3.1.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Soupmix\\": "src/"
+    }
+  },
+  "scripts": {
+    "test": [
+      "php vendor/bin/phpunit"
+    ],
+    "phpunit": "php vendor/bin/phpunit"
+  }
 }
