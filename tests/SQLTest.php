@@ -4,7 +4,7 @@ namespace tests;
 use Soupmix\SQL;
 use Doctrine\DBAL\DriverManager;
 
-class SQLTest extends \PHPUnit_Framework_TestCase
+class SQLTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @var \Soupmix\SQL $client
