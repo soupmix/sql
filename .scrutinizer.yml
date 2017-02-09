@@ -10,7 +10,7 @@ build:
   tests:
     override:
       -
-        command: 'phpunit --coverage-clover=.soupmix_coverage'
+        command: 'vendor/bin/phpunit --coverage-clover=.soupmix_coverage'
         coverage:
           file: '.soupmix_coverage'
           format: 'clover'
