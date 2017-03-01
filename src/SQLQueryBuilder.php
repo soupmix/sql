@@ -118,22 +118,17 @@ class SQLQueryBuilder extends AbstractQueryBuilder
 
     private function addAlias($fields, $collection = null)
     {
-        $collection = (!is_null($collection)) ? $collection : $this->collection;
+        $collection = (null !== $collection) ? $collection : $this->collection;
         if (!is_array($fields)) {
             return  $collection . '.' . $fields;
         }
-        if (!is_array($fields)) {
-            return  $collection . '.' . $fields;
-        }
+
         $newFields = [];
         foreach ($fields as $field => $value) {
-            if (strpos($value, '.')!== false) {
-                $newFields[] = $value;
-                continue;
-            }
+
             if (is_int($field)) {
-                if (!is_array($fields)) {
-                    $newFields[] = $collection . '.' . $fields;
+                if (strpos($value, '.') > 0) {
+                    $newFields[] = $value;
                     continue;
                 }
                 $newFields[] = $collection . '.' . $value;
