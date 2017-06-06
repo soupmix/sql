@@ -11,11 +11,10 @@ class SQLQueryBuilder extends AbstractQueryBuilder
     {
         $this->queryBuilder = $this->getQueryBuilder();
         $this->setJoins();
-        $count = $this->getCount();
-        if (!isset($count['total']) || ($count['total']==='0')) {
+        $numberOfRows = $this->getCount();
+        if ($numberOfRows === 0) {
             return ['total' => 0, 'data' => null];
         }
-        $numberOfRows = (int) $count['total'];
         $this->setSortOrders();
         $this->setOffsetAndLimit();
         $this->setReturnFields();
