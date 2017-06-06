@@ -35,7 +35,7 @@ class SQLQueryBuilder extends AbstractQueryBuilder
         if ($this->orFilters !== null) {
             $this->andFilters[] = $this->orFilters;
         }
-        $this->filters      = $this->andFilters;
+        $this->filters = $this->andFilters;
         return $this->buildQuery($this->collection, $this->filters);
     }
 
@@ -44,7 +44,7 @@ class SQLQueryBuilder extends AbstractQueryBuilder
         $queryBuilderCount = clone $this->queryBuilder;
         $queryBuilderCount->select(' COUNT(*) AS total ');
         $stmt = $this->conn->executeQuery($queryBuilderCount->getSql(), $queryBuilderCount->getParameters());
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
+        return (int) $stmt->fetch(\PDO::FETCH_ASSOC)['total'];
     }
 
     private function setSortOrders()
