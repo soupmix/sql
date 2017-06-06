@@ -13,6 +13,7 @@
     }
   ],
   "require": {
+    "php": "^7.1",
     "soupmix/base": "0.7.12",
     "doctrine/dbal": "~2.5.12"
   },

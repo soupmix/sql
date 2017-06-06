@@ -107,7 +107,7 @@ class SQLQueryBuilder extends AbstractQueryBuilder
             $this->queryBuilder->select($fieldNames);
             return;
         }
-        $this->queryBuilder->select('DISTINCT (`' . $this->collection . '`.`' . $this->distinctFieldName . '`)');
+        $this->queryBuilder->select('DISTINCT (' . $this->collection . '.' . $this->distinctFieldName . ')');
     }
 
     private function setOffsetAndLimit()
@@ -173,7 +173,7 @@ class SQLQueryBuilder extends AbstractQueryBuilder
             return $queryBuilder;
         }
         $queryBuilder->andWhere(
-            '`' . $this->collection . '`.`' . $sqlOptions['key'].'`'
+            '' . $this->collection . '.' . $sqlOptions['key'].''
             . ' ' . $sqlOptions['operand']
             . ' ' . $queryBuilder->createNamedParameter($sqlOptions['value'])
         );
@@ -193,7 +193,7 @@ class SQLQueryBuilder extends AbstractQueryBuilder
                 continue;
             }
             $orQuery[] =
-                '`' . $this->collection . '`.`' . $sqlOptions['key'].'`'
+                '' . $this->collection . '.' . $sqlOptions['key'].''
                 . ' ' . $sqlOptions['operand']
                 . ' ' . $queryBuilder->createNamedParameter($sqlOptions['value']);
         }

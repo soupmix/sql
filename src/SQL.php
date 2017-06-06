@@ -42,7 +42,7 @@ final class SQL implements Base
 
     public function truncate($collection)
     {
-        return $this->client->doctrine->query('TRUNCATE TABLE `' . $collection . '`');
+        return $this->client->doctrine->query('TRUNCATE TABLE ' . $collection . '');
     }
 
     public function createIndexes($collection, $fields)
