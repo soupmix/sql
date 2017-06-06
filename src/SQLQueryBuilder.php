@@ -12,10 +12,10 @@ class SQLQueryBuilder extends AbstractQueryBuilder
         $this->queryBuilder = $this->getQueryBuilder();
         $this->setJoins();
         $count = $this->getCount();
-        if (!isset($count[0]['total']) || ($count[0]['total']===0)) {
+        if (!isset($count['total']) || ($count['total']==='0')) {
             return ['total' => 0, 'data' => null];
         }
-        $numberOfRows = $count[0]['total'];
+        $numberOfRows = (int) $count['total'];
         $this->setSortOrders();
         $this->setOffsetAndLimit();
         $this->setReturnFields();
@@ -44,7 +44,7 @@ class SQLQueryBuilder extends AbstractQueryBuilder
         $queryBuilderCount = clone $this->queryBuilder;
         $queryBuilderCount->select(' COUNT(*) AS total ');
         $stmt = $this->conn->executeQuery($queryBuilderCount->getSql(), $queryBuilderCount->getParameters());
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
 
     private function setSortOrders()
