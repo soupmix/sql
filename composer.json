@@ -15,7 +15,7 @@
   "require": {
     "php": "^7.1",
     "soupmix/base": "0.7.12",
-    "doctrine/dbal": "~2.5.12"
+    "doctrine/dbal": "^2.6"
   },
   "require-dev": {
     "phpunit/phpunit": "~6.0",
