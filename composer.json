@@ -14,7 +14,7 @@
   ],
   "require": {
     "php": "^7.1",
-    "soupmix/base": "0.7.12",
+    "soupmix/base": "^0.7",
     "doctrine/dbal": "^2.6"
   },
   "require-dev": {
@@ -24,9 +24,11 @@
     "codeclimate/php-test-reporter": "dev-master"
   },
   "autoload": {
-    "psr-4": {
-      "Soupmix\\": "src/"
-    }
+    "classmap": [
+      "src/SQL.php",
+      "src/SQLQueryBuilder.php",
+      "src/SQLTable.php"
+    ]
   },
   "scripts": {
     "test": [
