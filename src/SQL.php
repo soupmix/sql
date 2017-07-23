@@ -24,14 +24,14 @@ final class SQL implements Base
         return $this->doctrine;
     }
 
-    public function create($collection, $fields)
+    public function create(string $collection, array $fields)
     {
         $schemaManager = $this->doctrine->getSchemaManager();
         $table = new SQLTable($schemaManager, $collection, $fields);
         return $table->createTable();
     }
 
-    public function drop($collection)
+    public function drop(string $collection)
     {
         $schemaManager = $this->doctrine->getSchemaManager();
         if ($schemaManager->tablesExist([$collection])) {
@@ -40,19 +40,19 @@ final class SQL implements Base
         return null;
     }
 
-    public function truncate($collection)
+    public function truncate(string $collection)
     {
         return $this->client->doctrine->query('TRUNCATE TABLE ' . $collection . '');
     }
 
-    public function createIndexes($collection, $fields)
+    public function createIndexes(string $collection, array $fields)
     {
         $schemaManager = $this->doctrine->getSchemaManager();
         $table = new SQLTable($schemaManager, $collection, $fields);
         return $table->createOnlyIndexes();
     }
 
-    public function insert($collection, $values)
+    public function insert(string $collection, array $values)
     {
         $insertion = $this->doctrine->insert($collection, $values);
         if ($insertion !== 0) {
@@ -61,23 +61,23 @@ final class SQL implements Base
         return null;
     }
 
-    public function update($collection, $filter, $values)
+    public function update(string $collection, array $filter, array $values)
     {
         return $this->doctrine->update($collection, $values, $filter);
     }
 
-    public function delete($collection, $filter)
+    public function delete(string $collection, array $filter)
     {
         $numberOfDeletedItems = $this->doctrine->delete($collection, $filter);
         return ($numberOfDeletedItems > 0) ? 1 : 0;
     }
 
-    public function get($collection, $docId)
+    public function get(string $collection, $docId)
     {
         return $this->doctrine->fetchAssoc('SELECT * FROM ' . $collection . ' WHERE id = ?', array($docId));
     }
 
-    public function find($collection, $filters, $fields = null, $sort = null, $offset = 0, $limit = 25)
+    public function find(string $collection, ?array $filters, ?array $fields = null, ?array $sort = null, ?int $offset = 0, ?int $limit = 25)
     {
         $query = $this->query($collection);
         foreach ($filters as $filter => $value) {
@@ -94,7 +94,7 @@ final class SQL implements Base
             ->run();
     }
 
-    public function query($collection)
+    public function query(string $collection)
     {
         return new SQLQueryBuilder($collection, $this);
     }
